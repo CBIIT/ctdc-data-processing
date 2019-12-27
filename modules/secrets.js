@@ -16,7 +16,7 @@ function getSecrets(){
 		var client = new AWS.SecretsManager({
 		    region: region
 		});
-			client.getSecretValue({SecretId: secretName}, function(err, data) {
+			client.getSecretValue({SecretId: secretName}, (err, data)=> {
 		    if (err) {
 		        if (err.code === 'DecryptionFailureException')
 		            // Secrets Manager can't decrypt the protected secret text using the provided KMS key.

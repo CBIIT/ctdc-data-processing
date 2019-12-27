@@ -23,7 +23,7 @@ function getOktaToken(secrets){
 		  },
 		  body: authParamsStr
 		  
-		}, function(err, res) {
+		}, (err, res) =>{
 		      if(err) {
 		        console.error('Error is: '+err);
 		        reject(err)
