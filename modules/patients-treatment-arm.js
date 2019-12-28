@@ -44,7 +44,7 @@ This function receives a JSON object from which the patient Ids are
 extracted and stored in a new array which is returned
 */
 function getPatientList(jsonObject){
-  console.log(jsonObject.length)
+  //console.log(jsonObject.length)
   let arr=[];
   for (var i=0; i<jsonObject.length; i++){
     if(jsonObject[i].patientSequenceNumber){
