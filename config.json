@@ -4,5 +4,6 @@
 	"oktaAuthUrl": "https://bioappdev.okta.com/oauth2/aus1hv2ve6fSdm1u7297/v1/token",
 	"matchUatBaseUrl":"https://api.match-uat.nci.nih.gov/api/v1/patients/by_treatment_arm/",
 	"armIds": ["EAY131-Z1D","EAY131-Q"],
-	"matchUatBaseUrlPatient":"https://api.match-uat.nci.nih.gov/api/v1/patients/"
+	"matchUatBaseUrlPatient":"https://api.match-uat.nci.nih.gov/api/v1/patients/",
+	"fileProjectionQuery":"biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.status"
 }
