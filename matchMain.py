@@ -71,7 +71,8 @@ while(i<len(armIds)):
     signedUrlList.append(templist)
     i+=1 
 print('PreSigned Urls Generated')
-#print(signedUrlList[0][0])
-print(signedUrlList[0][1])
-#print ("El secreto completo en JSON es ",secrets)
-#print(get_okta_token(secrets,data))
+#print(signedUrlList[0][1])
+#Generating a Sample Signed URL to test FileName Parsing
+signedUrlSample= signedUrlList[0][1][0]
+print(signedUrlSample.split("?")[0].split('/')[::-1][0])
+

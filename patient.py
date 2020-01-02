@@ -1,5 +1,6 @@
 import base64
 import json,requests
+import boto3
 
 DOWNLOAD_URL_SUBPATH='/download_url'
 
@@ -66,6 +67,21 @@ def getPatientS3Paths(data):
 
     
         
+def uploadPatientFile(url='',bucket_name='',key=''):
+    """
+    This function uploads a file pointed to from the url
+    into a bucket with the specified key name
+    """
+    
+    r = requests.get(url, stream=True)
+
+    session = boto3.Session()
+    s3 = session.resource('s3')
+    
+    bucket = s3.Bucket(bucket_name)
+    bucket.upload_fileobj(r.raw, key)
+
+
         
         
 
