@@ -1,8 +1,8 @@
 import base64
 import json,requests
 
-def get_okta_token(secrets,config):
-    url = config["oktaAuthUrl"]
+def get_okta_token(secrets,config,url=''):
+    
     
     body = {"client_id": secrets["OKTA_CLIENT_ID"],
 			"username": secrets["CURRENT_OKTA_USERNAME"],

@@ -5,5 +5,12 @@
 	"matchUatBaseUrl":"https://api.match-uat.nci.nih.gov/api/v1/patients/by_treatment_arm/",
 	"armIds": ["EAY131-Z1D","EAY131-Q"],
 	"matchUatBaseUrlPatient":"https://api.match-uat.nci.nih.gov/api/v1/patients/",
-	"fileProjectionQuery":"biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.status"
+	"fileProjectionQuery":"biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.status",
+	"secretNameProd": "Okta-Prod-Secrets",
+	"oktaAuthUrlProd": "https://bioappdev.okta.com/oauth2/aus1ii93gmb13QrEw297/v1/token",
+	"matchProdBaseUrl":"https://api.match.nci.nih.gov/api/v1/patients/by_treatment_arm/",
+	"matchProdBaseUrlPatient":"https://api.match.nci.nih.gov/api/v1/patients/",
+	"useProd": "FALSE"
+
+
 }

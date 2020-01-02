@@ -3,18 +3,13 @@ import json,requests
 
 DOWNLOAD_URL_SUBPATH='/download_url'
 
-with open('config.json') as config_file:
-    config = json.load(config_file)
-    MATCH_BASEURL_PATIENT=config['matchUatBaseUrlPatient']
-
-
-def getPatientsPreSignedURL(patientId,s3PathList,token):
+def getPatientsPreSignedURL(patientId,s3PathList,token,matchBaseUrlPatient=''):
     """
     This function returns a list of preSigned URLs for the files specified
     in the s3Paths list for the patient specified by patientId
     using the Okta Token specified by token
     """
-    url= MATCH_BASEURL_PATIENT+patientId+DOWNLOAD_URL_SUBPATH
+    url= matchBaseUrlPatient+patientId+DOWNLOAD_URL_SUBPATH
     signedUrlList=[]
     for path in s3PathList:
         s3Url=({"s3_url":path})
@@ -29,7 +24,7 @@ def getPatientsPreSignedURL(patientId,s3PathList,token):
 
 
 
-def getPatientsFileData(patients, token, projection):
+def getPatientsFileData(patients, token, projection,matchBaseUrlPatient=''):
     """
     This function retrieves the relevant files for the list
     of patients specified by patients using the Okta token.
@@ -37,9 +32,7 @@ def getPatientsFileData(patients, token, projection):
     of interest. It returns a 2D list of s3 paths indexed by
     patient and files.
     """
-    #Load the Config File   
-    matchBaseUrlPatient = config['matchUatBaseUrlPatient']    
-        
+         
     fileList=[]
     #Set the Headers
     headers = {'Authorization': token}

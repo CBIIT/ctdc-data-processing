@@ -1,18 +1,14 @@
 import base64
 import json,requests
 
-def getPatientsByTreatmentArm(arms=[],token=''):
+def getPatientsByTreatmentArm(arms=[],token='',matchBaseUrl=''):
     """
     This function gets a list of patients for each arm
     specified by the list of Patient Arms in arms. The
     token is the Okta token required for access to the Match 
     Environment
     """
-    #Load the Config File
-    with open('config.json') as config_file:
-        data = json.load(config_file)
-    #Get the Base URL    
-    matchBaseUrl = data.get('matchUatBaseUrl')
+    print(matchBaseUrl)
     #Set the Headers
     headers = {'Authorization': token}
     patientList=[]
