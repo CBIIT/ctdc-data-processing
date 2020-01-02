@@ -1,6 +1,5 @@
 import boto3
-import base64
-import json,requests
+import json
 from botocore.exceptions import ClientError
 
 
@@ -53,8 +52,7 @@ def get_secret(region_name,secret_name):
             secret = get_secret_value_response['SecretString']
 
 
-        else:
-            decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
+        
 
     return json.loads(secret)
 

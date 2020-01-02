@@ -1,11 +1,10 @@
-import base64
-import json,requests
+import requests
 
 def getPatientsByTreatmentArm(arms=[],token='',matchBaseUrl=''):
     """
     This function gets a list of patients for each arm
     specified by the list of Patient Arms in arms. The
-    token is the Okta token required for access to the Match 
+    token is the Okta token required for access to the Match
     Environment
     """
     print(matchBaseUrl)
@@ -23,5 +22,3 @@ def getPatientsByTreatmentArm(arms=[],token='',matchBaseUrl=''):
         
         patientList.append(plist) 
     return patientList
-    
-    

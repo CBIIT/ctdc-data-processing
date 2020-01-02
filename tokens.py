@@ -1,5 +1,4 @@
-import base64
-import json,requests
+import requests
 
 def get_okta_token(secrets,config,url=''):
     
