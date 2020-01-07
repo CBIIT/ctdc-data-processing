@@ -66,16 +66,19 @@ def getPatientS3Paths(data):
 
     
         
-def uploadPatientFile(url='',bucket_name='',key=''):
+def uploadPatientFiles(urls=[],bucket_name='',key=''):
     """
-    This function uploads a file pointed to from the url
-    into a bucket with the specified key name
+    This function uploads a set of files file pointed to from the Presigned 
+    urls into a bucket with the specified key name
     """
-    
-    r = requests.get(url, stream=True)
-
     session = boto3.Session()
     s3 = session.resource('s3')
-    
     bucket = s3.Bucket(bucket_name)
-    bucket.upload_fileobj(r.raw, key)
+    for url in urls:
+        r = requests.get(url, stream=True)
+        
+        if(key==''):
+            # If No Key is specified use the filename in the Presigned URL
+            key=url.split("?")[0].split('/')[::-1][0]
+    
+        bucket.upload_fileobj(r.raw, key)

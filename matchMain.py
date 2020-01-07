@@ -1,7 +1,7 @@
 from tokens import get_okta_token
 from secrets import get_secret
 from treatmentarm import getPatientsByTreatmentArm
-from patient import getPatientsFileData,getPatientsPreSignedURL
+from patient import getPatientsFileData,getPatientsPreSignedURL,uploadPatientFiles
 import json
 
 #Read the Configuration File
@@ -75,4 +75,22 @@ print('PreSigned Urls Generated')
 #Generating a Sample Signed URL to test FileName Parsing
 signedUrlSample= signedUrlList[0][1][0]
 print(signedUrlSample.split("?")[0].split('/')[::-1][0])
+i,j=0,0
+# Getting Bucket Name to upload files
+bucketName= secrets["S3_DEST_BUCKET_NAME"]
+
+print('Uploading Files...')
+#For all Arms
+while(i<len(armIds)):
+    #For all Patients per Arm
+    while (j<len(patientsListbyArm[i])):
+        #Upload file
+        uploadPatientFiles(signedUrlList[i][j],bucketName)
+
+print('Uploading Files Completed!')
+
+
+
+
+
 
