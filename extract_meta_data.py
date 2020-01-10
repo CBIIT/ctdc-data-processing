@@ -71,8 +71,47 @@ class MetaData:
             objs.append(obj)
         return objs
 
+    def extract_nucleic_acid(self, data):
+        objs = []
+        for biopsy in data['biopsies']:
+            biopsy_sequence_num = biopsy['biopsySequenceNumber']
+            for message in biopsy.get('mdAndersonMessages', []):
+                if 'molecularSequenceNumber' in message:
+                    obj = {'biopsySequenceNumber': biopsy_sequence_num}
+                    obj['molecularSequenceNumber'] = message.get('molecularSequenceNumber')
+                    obj['dnaConcentration'] = message.get('dnaConcentration')
+                    obj['dnaVolume'] = message.get('dnaVolume')
+                    objs.append(obj)
+                else:
+                    self.log.info('mdAndersonMessages does NOT have a molecularSequenceNumber, it is not a nucleic_acid')
+        return objs
 
-    def process_nodes(self):
+    def extract_ihc_assay_report(self, data):
+        objs = []
+        for biopsy in data['biopsies']:
+            biopsy_sequence_num = biopsy['biopsySequenceNumber']
+            for message in biopsy.get('assayMessages', []):
+                if 'result' in message:
+                    obj = {'biopsySequenceNumber': biopsy_sequence_num}
+                    obj['result'] = message.get('result')
+                    obj['biomarker'] = message.get('biomarker')
+                    objs.append(obj)
+                else:
+                    self.log.info('assayMessages does NOT have a result, it is not a ihc_assay_report')
+        return objs
+
+    def write_files(self):
+        for node in self.nodes.keys():
+            file_name = 'tmp/{}.csv'.format(node)
+            with open(file_name, 'w') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=self.fields[node])
+                writer.writeheader()
+
+                for obj in self.nodes[node]:
+                    writer.writerow(obj)
+
+
+    def prepare(self):
         self.nodes = {}
         self.nodes['case'] = []
         self.fields['case'] = [
@@ -96,23 +135,23 @@ class MetaData:
             'biopsySequenceNumber'
         ]
 
-        for data in self.patient_data:
-            self.nodes['case'].extend(self.extract_case(data))
-            self.nodes['specimen'].extend(self.extract_specimen(data))
+        self.nodes['nucleic_acid'] = []
+        self.fields['nucleic_acid'] = [
+            'biopsySequenceNumber',
+            'molecularSequenceNumber',
+            'dnaConcentration',
+            'dnaVolume'
+        ]
 
-    def write_files(self):
-        nodes = ['case', 'specimen']
-        for node in nodes:
-            file_name = 'tmp/{}.csv'.format(node)
-            with open(file_name, 'w') as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=self.fields[node])
-                writer.writeheader()
-
-                for obj in self.nodes[node]:
-                    writer.writerow(obj)
-
+        self.nodes['ihc_assay_report'] = []
+        self.fields['ihc_assay_report'] = [
+            'biopsySequenceNumber',
+            'biomarker',
+            'result'
+        ]
 
     def extract(self):
+        self.prepare()
         # Read Secrets from AWS Secrets Manager
         secrets = get_secret(self.config.region, self.config.secret_name)
         self.log.info('Secrets Read')
@@ -120,7 +159,6 @@ class MetaData:
         token = get_okta_token(secrets, self.config.data, self.config.oktaAuthUrl)
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
-        self.patient_data = []
         for armID in self.config.armIds:
             patientsListbyArm = getPatientsByTreatmentArm([armID], token, self.config.matchBaseUrl)
             self.log.info('List of Patients by Arm received')
@@ -128,9 +166,11 @@ class MetaData:
                 for p in patients:
                     data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, p)
                     data[ARM_ID] = armID
-                    self.patient_data.append(data)
+                    self.nodes['case'].extend(self.extract_case(data))
+                    self.nodes['specimen'].extend(self.extract_specimen(data))
+                    self.nodes['nucleic_acid'].extend(self.extract_nucleic_acid(data))
+                    self.nodes['ihc_assay_report'].extend(self.extract_ihc_assay_report(data))
 
-        self.process_nodes()
         self.write_files()
 
 
