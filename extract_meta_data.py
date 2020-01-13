@@ -172,9 +172,40 @@ class MetaData:
                     self.log.info('Sequence skipped, status: {}'.format(status))
         return (snv_variants, delins_variants, indel_variants, copy_number_variants, gene_fusion_variants)
 
+    def extract_assignment_report(self, data):
+        objs = []
+        for assignment in data['patientAssignments']:
+            obj = {}
+            obj['assignmentStatusOutcome'] = data['currentPatientStatus']
+            obj['stepNumber'] = assignment['stepNumber']
+            obj['arm_id'] = data['arm_id']
+            arm = assignment.get('treatmentArm')
+            if arm:
+                if 'patientAssignmentMessages' in assignment:
+                    assignment_messages = assignment['patientAssignmentMessages']
+                    if len(assignment_messages) > 0:
+                        last_assignment_message = assignment_messages[-1]
+                        obj['stepNumber'] = last_assignment_message['stepNumber']
+
+                if len(assignment['treatmentArms']) > 1:
+                    self.log.warning(('Paiient assigned to more than one arm'))
+                for arm in assignment['treatmentArms']:
+                    if arm['treatmentArmId'] == obj['arm_id']:
+                        obj['patientAssignmentLogic'] = arm['reason']
+            biopsy_sn = assignment.get('biopsySequenceNumber')
+            for biopsy in data['biopsies']:
+                if biopsy_sn == biopsy['biopsySequenceNumber']:
+                    for sequence in biopsy['nextGenerationSequences']:
+                        if sequence['status'] == 'CONFIRMED':
+                            obj['jobName'] = sequence['ionReporterResults']['jobName']
+
+            objs.append(obj)
+        return objs
+
     def write_files(self):
         for node in self.nodes.keys():
             file_name = 'tmp/{}.csv'.format(node)
+            self.log.info('Writing {} data into "{}"'.format(node, file_name))
             with open(file_name, 'w') as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=self.fields[node])
                 writer.writeheader()
@@ -296,6 +327,15 @@ class MetaData:
             "oncominevariantclass"
         ]
 
+        self.nodes['assignment_report'] = []
+        self.fields['assignment_report'] = [
+            "arm_id",
+            "jobName",
+            "stepNumber",
+            "patientAssignmentLogic",
+            "assignmentStatusOutcome"
+        ]
+
     def extract(self):
         self.prepare()
         # Read Secrets from AWS Secrets Manager
@@ -323,6 +363,7 @@ class MetaData:
                     self.nodes['indel_variant'].extend(indel_variants)
                     self.nodes['copy_number_variant'].extend(copy_number_variants)
                     self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
+                    self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
 
         self.write_files()
 
