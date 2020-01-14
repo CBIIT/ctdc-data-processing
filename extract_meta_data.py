@@ -53,57 +53,75 @@ class MetaData:
         obj['currentStepNumber'] = data.get('currentStepNumber')
         diseases = data.get('diseases', [])
         if len(diseases) == 1:
-            obj['diseases'] = diseases[0].get('ctepTerm', '')
+            obj['diseases'] = diseases[0].get('shortName', '')
             obj['ctepCategory'] = diseases[0].get('ctepCategory', '')
             obj['ctepSubCategory'] = diseases[0].get('ctepSubCategory', '')
             obj['disease_id'] = diseases[0].get('_id', '')
         else:
-            self.log.warning('wrong number of diseases!')
+            self.log.error('wrong number ({}) of diseases!'.format(len(diseases)))
 
         obj['priorDrugs'] = self.get_prior_drugs(data.get('priorDrugs', []))
         return [obj]
 
-    def extract_specimen(self, data):
-        objs = []
+    def extract_specimen_n_nucleic_acid(self, data):
+        necleic_acids = []
+        speicmens = []
         for biopsy in data.get('biopsies', []):
-            obj = {}
-            obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
-            obj['biopsySequenceNumber'] = biopsy.get('biopsySequenceNumber')
-            objs.append(obj)
-        return objs
-
-    def extract_nucleic_acid(self, data):
-        objs = []
-        for biopsy in data.get('biopsies', []):
-            biopsy_sequence_num = biopsy.get('biopsySequenceNumber')
             for message in biopsy.get('mdAndersonMessages', []):
-                if 'molecularSequenceNumber' in message:
-                    obj = {'biopsySequenceNumber': biopsy_sequence_num}
+                type = message.get('message')
+                if type == 'NUCLEIC_ACID_SENDOUT':
+                    obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
                     obj['molecularSequenceNumber'] = message.get('molecularSequenceNumber')
                     obj['dnaConcentration'] = message.get('dnaConcentration')
                     obj['dnaVolume'] = message.get('dnaVolume')
-                    objs.append(obj)
+                    necleic_acids.append(obj)
+                elif type == 'SPECIMEN_RECEIVED':
+                    obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
+                    obj['patientSequenceNumber'] = message.get('patientSequenceNumber')
+                    speicmens.append(obj)
                 else:
-                    self.log.info('mdAndersonMessages does NOT have a molecularSequenceNumber, it is not a nucleic_acid')
-        return objs
+                    self.log.debug('mdAndersonMessages is not a nucleic_acid or specimen')
+        return (necleic_acids, speicmens)
 
     def extract_ihc_assay_report(self, data):
         objs = []
         # There are almost identical information in "patient_assignments/*/assayMessages"
         for biopsy in data.get('biopsies', []):
-            biopsy_sequence_num = biopsy.get('biopsySequenceNumber')
             for message in biopsy.get('assayMessages', []):
-                if 'result' in message:
-                    obj = {'biopsySequenceNumber': biopsy_sequence_num}
-                    obj['result'] = message.get('result')
-                    obj['biomarker'] = message.get('biomarker')
-                    objs.append(obj)
-                else:
-                    self.log.info('assayMessages does NOT have a result, it is not a ihc_assay_report')
+                obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
+                obj['result'] = message.get('result')
+                obj['biomarker'] = message.get('biomarker')
+                objs.append(obj)
         return objs
+
+    def extract_variant_report_n_sequencing_assay(self, data):
+        variant_reports = []
+        sequence_assays = []
+        for biopsy in data['biopsies']:
+            for sequence in biopsy.get('nextGenerationSequences', []):
+                if sequence.get('status') == 'CONFIRMED':
+                    ion_result = sequence.get('ionReporterResults', {})
+                    control_panel = ion_result.get('oncomineControlPanel', {})
+                    variant_rpt = {}
+                    variant_rpt['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
+                    variant_rpt['jobName'] = ion_result.get('jobName')
+                    variant_rpt['mapd'] = ion_result.get('copyNumberReport', {}).get('mapd')
+                    variant_rpt['cellularity'] = ion_result.get('copyNumberReport', {}).get('cellularity')
+                    variant_rpt['tvc_version'] = control_panel.get('tvc_version')
+                    variant_reports.append(variant_rpt)
+
+                    assay = {}
+                    assay['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
+                    qc_rsts = []
+                    for gene, value in control_panel.get('genes', {}).items():
+                        qc_rsts.append('{}: {}'.format(gene, value))
+                    assay['qc_result'] = '; '.join(qc_rsts)
+                    sequence_assays.append(assay)
+        return (variant_reports, sequence_assays)
 
     def fill_in_variant_obj(self, obj, report):
         obj['identifier'] = report.get('identifier')
+        obj['gene'] = report.get('gene')
         obj['chromosome'] = report.get('chromosome')
         obj['exon'] = report.get('exon')
         obj['position'] = report.get('position')
@@ -123,29 +141,29 @@ class MetaData:
         copy_number_variants = []
         gene_fusion_variants = []
         for biopsy in data['biopsies']:
-            biopsy_sequence_num = biopsy['biopsySequenceNumber']
             for sequence in biopsy.get('nextGenerationSequences', []):
                 status = sequence['status']
                 if status == 'CONFIRMED':
                     variant_report = sequence.get('ionReporterResults', {}).get('variantReport', {})
+                    molecular_sn = sequence.get('ionReporterResults', {}).get('molecularSequenceNumber')
                     for report in variant_report.get('singleNucleotideVariants', []):
-                        obj = {}
+                        obj = {'molecularSequenceNumber': molecular_sn}
                         self.fill_in_variant_obj(obj, report)
                         snv_variants.append(obj)
                     for report in variant_report.get('indels', []):
-                        obj = {}
+                        obj = {'molecularSequenceNumber': molecular_sn}
                         self.fill_in_variant_obj(obj, report)
                         indel_variants.append(obj)
                     # TODO: delins_variant doesn't exists in variant report
                     if 'delins_variant' in variant_report:
                         self.log.warning('delins_variant actually exists!')
                         for report in variant_report.get('delins_variant', []):
-                            obj = {}
+                            obj = {'molecularSequenceNumber': molecular_sn}
                             self.fill_in_variant_obj(obj, report)
                             delins_variants.append(obj)
 
                     for report in variant_report.get('copyNumberVariants', []):
-                        obj = {}
+                        obj = {'molecularSequenceNumber': molecular_sn}
                         obj['identifier'] = report.get('identifier')
                         obj['gene'] = report.get('gene')
                         obj['chromosome'] = report.get('chromosome')
@@ -158,7 +176,7 @@ class MetaData:
                         copy_number_variants.append(obj)
 
                     for report in variant_report.get('unifiedGeneFusions', []):
-                        obj = {}
+                        obj = {'molecularSequenceNumber': molecular_sn}
                         obj['identifier'] = report.get('identifier')
                         obj['partnerGene'] = report.get('partnerGene')
                         obj['partnerReadCount'] = report.get('partnerReadCount')
@@ -174,33 +192,37 @@ class MetaData:
 
     def extract_assignment_report(self, data):
         objs = []
-        for assignment in data['patientAssignments']:
-            obj = {}
-            obj['assignmentStatusOutcome'] = data['currentPatientStatus']
-            obj['stepNumber'] = assignment['stepNumber']
-            obj['arm_id'] = data['arm_id']
-            arm = assignment.get('treatmentArm')
-            if arm:
-                if 'patientAssignmentMessages' in assignment:
-                    assignment_messages = assignment['patientAssignmentMessages']
-                    if len(assignment_messages) > 0:
-                        last_assignment_message = assignment_messages[-1]
-                        obj['stepNumber'] = last_assignment_message['stepNumber']
+        for assignment in data.get('patientAssignments', []):
+            if assignment.get('patientAssignmentStatus') != 'NO_ARM_ASSIGNED':
+                treatment_arm = assignment.get('treatmentArm')
+                if treatment_arm:
+                    arm_id = treatment_arm.get('treatmentArmId')
+                    if arm_id:
+                        obj = {ARM_ID: arm_id}
+                        obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
+                        # Todo: assignmentStatusOutcome seems not exactly the value we want
+                        obj['assignmentStatusOutcome'] = data.get('currentPatientStatus')
+                        obj['stepNumber'] = assignment.get('stepNumber')
 
-                if len(assignment['treatmentArms']) > 1:
-                    self.log.warning(('Paiient assigned to more than one arm'))
-                for arm in assignment['treatmentArms']:
-                    if arm['treatmentArmId'] == obj['arm_id']:
-                        obj['patientAssignmentLogic'] = arm['reason']
-            biopsy_sn = assignment.get('biopsySequenceNumber')
-            for biopsy in data['biopsies']:
-                if biopsy_sn == biopsy['biopsySequenceNumber']:
-                    for sequence in biopsy['nextGenerationSequences']:
-                        if sequence['status'] == 'CONFIRMED':
-                            obj['jobName'] = sequence['ionReporterResults']['jobName']
+                        arms = assignment.get('patientAssignmentLogic', [])
+                        for arm in arms:
+                            if arm['treatmentArmId'] == obj[ARM_ID]:
+                                obj['patientAssignmentLogic'] = arm.get('reason')
 
-            objs.append(obj)
+                        # jobName seems not really belongs to assignment_report
+                        biopsy_sn = assignment.get('biopsySequenceNumber')
+                        for biopsy in data.get('biopsies', []):
+                            if biopsy_sn == biopsy.get('biopsySequenceNumber'):
+                                for sequence in biopsy.get('nextGenerationSequences'):
+                                    if sequence.get('status') == 'CONFIRMED':
+                                        obj['jobName'] = sequence.get('ionReporterResults', {}).get('jobName')
+                        objs.append(obj)
+                    else:
+                        self.log.error('Assignment with arm but no arm_id!')
+                else:
+                    self.log.warning('Assignment without treatmentArm!')
         return objs
+
 
     def write_files(self):
         for node in self.nodes.keys():
@@ -255,6 +277,7 @@ class MetaData:
 
         self.nodes['snv_variant'] = []
         self.fields['snv_variant'] = [
+            "molecularSequenceNumber",
             "identifier",
             "gene",
             "chromosome",
@@ -273,6 +296,7 @@ class MetaData:
 
         self.nodes['delins_variant'] = []
         self.fields['delins_variant'] = [
+            "molecularSequenceNumber",
             "identifier",
             "gene",
             "chromosome",
@@ -290,6 +314,7 @@ class MetaData:
 
         self.nodes['indel_variant'] = []
         self.fields['indel_variant'] = [
+            "molecularSequenceNumber",
             "identifier",
             "gene",
             "chromosome",
@@ -307,6 +332,7 @@ class MetaData:
 
         self.nodes['copy_number_variant'] = []
         self.fields['copy_number_variant'] = [
+            "molecularSequenceNumber",
             "identifier",
             "gene",
             "chromosome",
@@ -319,6 +345,7 @@ class MetaData:
 
         self.nodes['gene_fusion_variant'] = []
         self.fields['gene_fusion_variant'] = [
+            "molecularSequenceNumber",
             "identifier",
             "partnerGene",
             "partnerReadCount",
@@ -329,11 +356,27 @@ class MetaData:
 
         self.nodes['assignment_report'] = []
         self.fields['assignment_report'] = [
-            "arm_id",
+            ARM_ID,
+            "patientSequenceNumber",
             "jobName",
             "stepNumber",
             "patientAssignmentLogic",
             "assignmentStatusOutcome"
+        ]
+
+        self.nodes['variant_report'] = []
+        self.fields['variant_report'] = [
+            'molecularSequenceNumber',
+            "jobName",
+            "mapd",
+            "cellularity",
+            "tvc_version"
+        ]
+
+        self.nodes['sequence_assay'] = []
+        self.fields['sequence_assay'] = [
+            'molecularSequenceNumber',
+            "qc_result"
         ]
 
     def extract(self):
@@ -353,9 +396,13 @@ class MetaData:
                     data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, p)
                     data[ARM_ID] = armID
                     self.nodes['case'].extend(self.extract_case(data))
-                    self.nodes['specimen'].extend(self.extract_specimen(data))
-                    self.nodes['nucleic_acid'].extend(self.extract_nucleic_acid(data))
+                    nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
+                    self.nodes['specimen'].extend(speicimens)
+                    self.nodes['nucleic_acid'].extend(nucleic_acid_reports)
                     self.nodes['ihc_assay_report'].extend(self.extract_ihc_assay_report(data))
+                    variant_reports, sequence_assays = self.extract_variant_report_n_sequencing_assay(data)
+                    self.nodes['variant_report'].extend(variant_reports)
+                    self.nodes['sequence_assay'].extend(sequence_assays)
                     (snv_variants, delins_variants, indel_variants, copy_number_variants, gene_fusion_variants) \
                     = self.extract_variants(data)
                     self.nodes['snv_variant'].extend(snv_variants)
