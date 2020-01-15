@@ -96,17 +96,19 @@ class MetaData:
 
     def extract_variant_report_n_sequencing_assay(self, data):
         variant_reports = []
-        sequence_assays = []
+        sequencing_assays = []
         for biopsy in data['biopsies']:
             for sequence in biopsy.get('nextGenerationSequences', []):
                 if sequence.get('status') == 'CONFIRMED':
                     ion_result = sequence.get('ionReporterResults', {})
                     control_panel = ion_result.get('oncomineControlPanel', {})
+                    copy_number_rpt = ion_result.get('copyNumberReport', {})
                     variant_rpt = {}
                     variant_rpt['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
+                    variant_rpt['biopsySequenceNumber'] = copy_number_rpt.get('biopsySequenceNumber')
                     variant_rpt['jobName'] = ion_result.get('jobName')
-                    variant_rpt['mapd'] = ion_result.get('copyNumberReport', {}).get('mapd')
-                    variant_rpt['cellularity'] = ion_result.get('copyNumberReport', {}).get('cellularity')
+                    variant_rpt['mapd'] = copy_number_rpt.get('mapd')
+                    variant_rpt['cellularity'] = copy_number_rpt.get('cellularity')
                     variant_rpt['tvc_version'] = control_panel.get('tvc_version')
                     variant_reports.append(variant_rpt)
 
@@ -116,8 +118,8 @@ class MetaData:
                     for gene, value in control_panel.get('genes', {}).items():
                         qc_rsts.append('{}: {}'.format(gene, value))
                     assay['qc_result'] = '; '.join(qc_rsts)
-                    sequence_assays.append(assay)
-        return (variant_reports, sequence_assays)
+                    sequencing_assays.append(assay)
+        return (variant_reports, sequencing_assays)
 
     def fill_in_variant_obj(self, obj, report):
         obj['identifier'] = report.get('identifier')
@@ -129,7 +131,7 @@ class MetaData:
         obj['alternative'] = report.get('alternative')
         obj['alleleFrequency'] = report.get('alleleFrequency')
         obj['transcript'] = report.get('transcript')
-        obj['hgvs'] = report['hgvs'] if 'hgvs' in report else report.get('genomicHgvs')
+        obj['hgvs'] = report.get('hgvs')
         obj['oncominevariantclass'] = report.get('oncominevariantclass')
         obj['function'] = report.get('function')
         obj['protein'] = report.get('protein')
@@ -211,6 +213,7 @@ class MetaData:
 
                         # jobName seems not really belongs to assignment_report
                         biopsy_sn = assignment.get('biopsySequenceNumber')
+                        obj['biopsySequenceNumber'] = biopsy_sn
                         for biopsy in data.get('biopsies', []):
                             if biopsy_sn == biopsy.get('biopsySequenceNumber'):
                                 for sequence in biopsy.get('nextGenerationSequences'):
@@ -358,6 +361,7 @@ class MetaData:
         self.fields['assignment_report'] = [
             ARM_ID,
             "patientSequenceNumber",
+            "biopsySequenceNumber",
             "jobName",
             "stepNumber",
             "patientAssignmentLogic",
@@ -366,6 +370,7 @@ class MetaData:
 
         self.nodes['variant_report'] = []
         self.fields['variant_report'] = [
+            "biopsySequenceNumber",
             'molecularSequenceNumber',
             "jobName",
             "mapd",
@@ -373,8 +378,8 @@ class MetaData:
             "tvc_version"
         ]
 
-        self.nodes['sequence_assay'] = []
-        self.fields['sequence_assay'] = [
+        self.nodes['sequencing_assay'] = []
+        self.fields['sequencing_assay'] = [
             'molecularSequenceNumber',
             "qc_result"
         ]
@@ -400,9 +405,9 @@ class MetaData:
                     self.nodes['specimen'].extend(speicimens)
                     self.nodes['nucleic_acid'].extend(nucleic_acid_reports)
                     self.nodes['ihc_assay_report'].extend(self.extract_ihc_assay_report(data))
-                    variant_reports, sequence_assays = self.extract_variant_report_n_sequencing_assay(data)
+                    variant_reports, sequencing_assays = self.extract_variant_report_n_sequencing_assay(data)
                     self.nodes['variant_report'].extend(variant_reports)
-                    self.nodes['sequence_assay'].extend(sequence_assays)
+                    self.nodes['sequencing_assay'].extend(sequencing_assays)
                     (snv_variants, delins_variants, indel_variants, copy_number_variants, gene_fusion_variants) \
                     = self.extract_variants(data)
                     self.nodes['snv_variant'].extend(snv_variants)
