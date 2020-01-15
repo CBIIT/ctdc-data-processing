@@ -101,19 +101,22 @@ class MetaData:
             for sequence in biopsy.get('nextGenerationSequences', []):
                 if sequence.get('status') == 'CONFIRMED':
                     ion_result = sequence.get('ionReporterResults', {})
-                    control_panel = ion_result.get('oncomineControlPanel', {})
                     copy_number_rpt = ion_result.get('copyNumberReport', {})
                     variant_rpt = {}
-                    variant_rpt['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
-                    variant_rpt['biopsySequenceNumber'] = copy_number_rpt.get('biopsySequenceNumber')
+                    variant_rpt['molecularSequenceNumber'] = copy_number_rpt.get('molecularSequenceNumber')
+                    if not variant_rpt['molecularSequenceNumber']:
+                        variant_rpt['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
                     variant_rpt['jobName'] = ion_result.get('jobName')
                     variant_rpt['mapd'] = copy_number_rpt.get('mapd')
                     variant_rpt['cellularity'] = copy_number_rpt.get('cellularity')
-                    variant_rpt['tvc_version'] = control_panel.get('tvc_version')
+                    variant_rpt['tvc_version'] = copy_number_rpt.get('tvc_version')
                     variant_reports.append(variant_rpt)
 
+                    control_panel = ion_result.get('oncomineControlPanel', {})
                     assay = {}
-                    assay['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
+                    assay['molecularSequenceNumber'] = control_panel.get('molecularSequenceNumber')
+                    if not assay['molecularSequenceNumber']:
+                        assay['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
                     qc_rsts = []
                     for gene, value in control_panel.get('genes', {}).items():
                         qc_rsts.append('{}: {}'.format(gene, value))
@@ -370,7 +373,6 @@ class MetaData:
 
         self.nodes['variant_report'] = []
         self.fields['variant_report'] = [
-            "biopsySequenceNumber",
             'molecularSequenceNumber',
             "jobName",
             "mapd",
