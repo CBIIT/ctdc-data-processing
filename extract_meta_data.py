@@ -53,7 +53,7 @@ class MetaData:
         obj['currentStepNumber'] = data.get('currentStepNumber')
         diseases = data.get('diseases', [])
         if len(diseases) == 1:
-            obj['diseases'] = diseases[0].get('shortName', '')
+            obj['diseases'] = diseases[0].get('ctepTerm', '')
             obj['ctepCategory'] = diseases[0].get('ctepCategory', '')
             obj['ctepSubCategory'] = diseases[0].get('ctepSubCategory', '')
             obj['disease_id'] = diseases[0].get('_id', '')
