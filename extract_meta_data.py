@@ -150,25 +150,25 @@ class MetaData:
                 status = sequence['status']
                 if status == 'CONFIRMED':
                     variant_report = sequence.get('ionReporterResults', {}).get('variantReport', {})
-                    molecular_sn = sequence.get('ionReporterResults', {}).get('molecularSequenceNumber')
+                    job_name = sequence.get('ionReporterResults', {}).get('jobName')
                     for report in variant_report.get('singleNucleotideVariants', []):
-                        obj = {'molecularSequenceNumber': molecular_sn}
+                        obj = {'jobName': job_name}
                         self.fill_in_variant_obj(obj, report)
                         snv_variants.append(obj)
                     for report in variant_report.get('indels', []):
-                        obj = {'molecularSequenceNumber': molecular_sn}
+                        obj = {'jobName': job_name}
                         self.fill_in_variant_obj(obj, report)
                         indel_variants.append(obj)
                     # TODO: delins_variant doesn't exists in variant report
                     if 'delins_variant' in variant_report:
                         self.log.warning('delins_variant actually exists!')
                         for report in variant_report.get('delins_variant', []):
-                            obj = {'molecularSequenceNumber': molecular_sn}
+                            obj = {'jobName': job_name}
                             self.fill_in_variant_obj(obj, report)
                             delins_variants.append(obj)
 
                     for report in variant_report.get('copyNumberVariants', []):
-                        obj = {'molecularSequenceNumber': molecular_sn}
+                        obj = {'jobName': job_name}
                         obj['identifier'] = report.get('identifier')
                         obj['gene'] = report.get('gene')
                         obj['chromosome'] = report.get('chromosome')
@@ -181,7 +181,7 @@ class MetaData:
                         copy_number_variants.append(obj)
 
                     for report in variant_report.get('unifiedGeneFusions', []):
-                        obj = {'molecularSequenceNumber': molecular_sn}
+                        obj = {'jobName': job_name}
                         obj['identifier'] = report.get('identifier')
                         obj['partnerGene'] = report.get('partnerGene')
                         obj['partnerReadCount'] = report.get('partnerReadCount')
@@ -283,7 +283,7 @@ class MetaData:
 
         self.nodes['snv_variant'] = []
         self.fields['snv_variant'] = [
-            "molecularSequenceNumber",
+            "jobName",
             "identifier",
             "gene",
             "chromosome",
@@ -302,7 +302,7 @@ class MetaData:
 
         self.nodes['delins_variant'] = []
         self.fields['delins_variant'] = [
-            "molecularSequenceNumber",
+            "jobName",
             "identifier",
             "gene",
             "chromosome",
@@ -320,7 +320,7 @@ class MetaData:
 
         self.nodes['indel_variant'] = []
         self.fields['indel_variant'] = [
-            "molecularSequenceNumber",
+            "jobName",
             "identifier",
             "gene",
             "chromosome",
@@ -338,7 +338,7 @@ class MetaData:
 
         self.nodes['copy_number_variant'] = []
         self.fields['copy_number_variant'] = [
-            "molecularSequenceNumber",
+            "jobName",
             "identifier",
             "gene",
             "chromosome",
@@ -351,7 +351,7 @@ class MetaData:
 
         self.nodes['gene_fusion_variant'] = []
         self.fields['gene_fusion_variant'] = [
-            "molecularSequenceNumber",
+            "jobName",
             "identifier",
             "partnerGene",
             "partnerReadCount",
