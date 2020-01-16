@@ -6,13 +6,14 @@ from datetime import datetime
 import json
 
 # Read the Configuration File
-with open('config.json') as config_file:
+with open('./config/config.json') as config_file:
     data = json.load(config_file)
 
 # Read the region
 region = data['region']
 # Get List of Arms
 armIds = data['armIds']
+acls = data['phsIds']
 if((data['useProd']) == 'TRUE'):
     print('Using Match Production Environment')
     # Get the Secret Name
@@ -91,6 +92,7 @@ while(i < len(armIds)):
     # For all Patients per Arm
     while (j < len(patientsListbyArm[i])):
         # Upload file
-        uploadPatientFiles(signedUrlList[i][j], bucketName, manifest_filename)
+        uploadPatientFiles(signedUrlList[i][j],
+                           acls[i], bucketName, manifest_filename)
 
 print('Uploading Files Completed!')

@@ -3,9 +3,19 @@ import boto3
 import csv
 import hashlib
 import os
+from bento.common.utils import get_md5, UUID
 
+# Specifying the Constants for the Manifest File
+GUID = 'GUID'
+ACL = 'acl'
+MD5 = 'md5'
+SIZE = 'size'
+URL = 'url'
+DEFAULT_ACL = "['Open']"
+MANIFEST_FIELDS = [GUID, MD5, SIZE, ACL, URL]
+
+# Subpath for PreSigned URL request
 DOWNLOAD_URL_SUBPATH = '/download_url'
-BLOCK_SIZE = 65536
 
 
 def getPatientsPreSignedURL(patientId, s3PathList, token, matchBaseUrlPatient=''):
@@ -71,29 +81,7 @@ def getPatientS3Paths(data):
     return s3PathList
 
 
-def _get_hash(file_name, hash_func):
-    """
-    This function returns the hash function of the filename provided using
-    the hash_func library passed to it.
-    """
-    with open(file_name, 'rb') as afile:
-        buf = afile.read(BLOCK_SIZE)
-        while len(buf) > 0:
-            hash_func.update(buf)
-            buf = afile.read(BLOCK_SIZE)
-    return hash_func.hexdigest()
-
-
-def get_md5(file_name):
-    """
-    This function returns the md5 of the filename provided using
-    the _get_hash function
-    """
-    hash_func = hashlib.md5()
-    return _get_hash(file_name, hash_func)
-
-
-def uploadPatientFiles(urls=[], bucket_name='', manifestpath=''):
+def uploadPatientFiles(urls=[], acl=DEFAULT_ACL, bucket_name='', manifestpath=''):
     """
     This function uploads a set of files file pointed to from the Presigned 
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
@@ -116,8 +104,11 @@ def uploadPatientFiles(urls=[], bucket_name='', manifestpath=''):
 
         #print(f'Wrote File {filename} to disk')
 
-        # Calculate MD5 and Size
+        # Calculate MD5 , Size and Bucket Location
         md5 = get_md5(filename)
+        s3_location = "s3://{}/{}".format(bucket, s3_key)
+        file_size = os.stat(filename).st_size
+
         # Generate the GUID
         # After Upload, Generate the Path Location
         # Write all these values to the Manifest File
