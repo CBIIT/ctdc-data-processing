@@ -3,6 +3,7 @@ import boto3
 import csv
 import hashlib
 import os
+import jsonpickle
 from bento.common.utils import get_md5, UUID
 
 # Specifying the Constants for the Manifest File
@@ -11,74 +12,113 @@ ACL = 'acl'
 MD5 = 'md5'
 SIZE = 'size'
 URL = 'url'
+FILE_NAME = 'file_name'
 DEFAULT_ACL = "['Open']"
+FILE_LOC = 'file_locations'
+FILE_FORMAT = 'file_format'
+FILE_STAT = 'file_status'
+FILE_SIZE = "file_size"
+FILE_TYPE = "file_type"
+FILE_TYPES = ["DNA BAM File", "RNA BAM File", "VCF File"]
 MANIFEST_FIELDS = [GUID, MD5, SIZE, ACL, URL]
 
 # Subpath for PreSigned URL request
 DOWNLOAD_URL_SUBPATH = '/download_url'
 
 
-def getPatientsPreSignedURL(patientId, s3PathList, token, matchBaseUrlPatient=''):
-    """
-    This function returns a list of preSigned URLs for the files specified
-    in the s3Paths list for the patient specified by patientId
-    using the Okta Token specified by token
-    """
-    url = matchBaseUrlPatient+patientId+DOWNLOAD_URL_SUBPATH
-    signedUrlList = []
-    for path in s3PathList:
-        s3Url = ({"s3_url": path})
-        headers = {
-            'Authorization': token,
-            'Content-Type': 'application/json'
-        }
-        r = requests.post(url, json=s3Url, headers=headers)
-        response = r.json()
-        signedUrlList.append(response['download_url'])
-    return signedUrlList
+class Patient(object):
+    def __init__(self, patientId, armId):
+        self.patientId = patientId
+        self.armId = armId
+        self.files = []
 
 
-def getPatientsFileData(patients, token, projection, matchBaseUrlPatient=''):
+def getPatientsPreSignedURL(token, matchBaseUrlPatient='', myPatientList=[]):
+    """
+    This function retrieves the Presigned URL for each file for each
+    patient in the list of patient objects provided in myPatientList
+    """
+    for patient in myPatientList:
+        # Create the MATCH Api URL
+        url = matchBaseUrlPatient+patient.patientId+DOWNLOAD_URL_SUBPATH
+        # For each file in the patient object
+        for file in patient.files:
+            s3Url = ({"s3_url": file["s3url"]})
+            headers = {
+                'Authorization': token,
+                'Content-Type': 'application/json'
+            }
+            r = requests.post(url, json=s3Url, headers=headers)
+            # Add a dictionary item for the file object
+            file['download_url'] = r.json()['download_url']
+        # print(jsonpickle.encode(patient))
+
+
+def getPatientsFileData(token, projection, matchBaseUrlPatient='', myPatientList=[]):
     """
     This function retrieves the relevant files for the list
-    of patients specified by patients using the Okta token.
+    of patients specified by myPatientList using the Okta token.
     The projection parameter is used to retrieve only the fields
-    of interest. It returns a 2D list of s3 paths indexed by
-    patient and files. 
+    of interest. It updates the myPatientList Object with the 
+    filepaths for each file for each patient. 
     """
 
-    fileList = []
     # Set the Headers
     headers = {'Authorization': token}
     # Iterate to retrive the S3 Paths for all patients
-    for patient in patients:
-        url = matchBaseUrlPatient+patient+'?'+'projection='+projection
+    for patient in myPatientList:
+        url = matchBaseUrlPatient+patient.patientId+'?'+'projection='+projection
         r = requests.get(url, headers=headers)
         response = r.json()
-        pathList = getPatientS3Paths(response)
-        fileList.append(pathList)
-    return fileList
+        getPatientS3Paths(response, patient)
 
 
-def getPatientS3Paths(data):
+def getPatientS3Paths(data, patientFromList=None):
     """
     This function iterates through the list of biopsies and filters
     out the sequences with a CONFIRMED variant report status and returns
-    the dna, rna bam and the vcf files.
+    the dna, rna bam vcf dnabai and rnabai files.
     """
-    s3PathList = []
+
+    fileInfo = {}
     #biopsesLen = len(data['biopsies'])
     for biopsy in data['biopsies']:
         for nextGenerationSequence in biopsy['nextGenerationSequences']:
             status = nextGenerationSequence['status']
+            # Look for Biopsies with Confirmed Status
             if(status == 'CONFIRMED'):
-                s3PathList.append(
-                    (nextGenerationSequence['ionReporterResults']['dnaBamFilePath']))
-                s3PathList.append(
-                    (nextGenerationSequence['ionReporterResults']['rnaBamFilePath']))
-                s3PathList.append(
-                    (nextGenerationSequence['ionReporterResults']['vcfFilePath']))
-    return s3PathList
+
+                # Checking for each file type presence and adding it to the file object array for each
+                # patient
+                fileInfo = {}
+                if('dnaBamFilePath' in nextGenerationSequence['ionReporterResults']):
+                    fileInfo["type"] = 'dnaBamFilePath'
+                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['dnaBamFilePath']
+                    patientFromList.files.append(fileInfo)
+
+                fileInfo = {}
+                if('rnaBamFilePath' in nextGenerationSequence['ionReporterResults']):
+                    fileInfo["type"] = 'rnaBamFilePath'
+                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['rnaBamFilePath']
+                    patientFromList.files.append(fileInfo)
+
+                fileInfo = {}
+                if('vcfFilePath' in nextGenerationSequence['ionReporterResults']):
+                    fileInfo["type"] = 'vcfFilePath'
+                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['vcfFilePath']
+                    patientFromList.files.append(fileInfo)
+
+                fileInfo = {}
+                if('dnaBaiFilePath' in nextGenerationSequence['ionReporterResults']):
+                    fileInfo["type"] = 'dnaBaiFilePath'
+                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['dnaBaiFilePath']
+                    patientFromList.files.append(fileInfo)
+
+                fileInfo = {}
+                if('rnaBaiFilePath' in nextGenerationSequence['ionReporterResults']):
+                    fileInfo["type"] = 'rnaBaiFilePath'
+                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['rnaBaiFilePath']
+                    patientFromList.files.append(fileInfo)
 
 
 def uploadPatientFiles(urls=[], acl=DEFAULT_ACL, bucket_name='', manifestpath=''):
@@ -89,7 +129,9 @@ def uploadPatientFiles(urls=[], acl=DEFAULT_ACL, bucket_name='', manifestpath=''
     session = boto3.Session()
     s3 = session.resource('s3')
     bucket = s3.Bucket(bucket_name)
-    for url in urls:
+    files = {}
+
+    for index, url in enumerate(urls):
         # Get the File using the PreSigned URL
         r = requests.get(url, stream=True)
         # Get the Filename from the PreSigned URL
@@ -102,17 +144,34 @@ def uploadPatientFiles(urls=[], acl=DEFAULT_ACL, bucket_name='', manifestpath=''
         # Upload File to S3
         bucket.upload_file(Filename=filename, Key=s3_key)
 
-        #print(f'Wrote File {filename} to disk')
-
         # Calculate MD5 , Size and Bucket Location
         md5 = get_md5(filename)
         s3_location = "s3://{}/{}".format(bucket, s3_key)
         file_size = os.stat(filename).st_size
+        file_format = (os.path.splitext(filename)[1]).split('.')[1].lower()
+        # Delete the file once it has been processed
+        print(f'Processed File {filename} with index {index}')
+        os.remove(filename)
+        files[filename] = {
+            FILE_NAME: filename,
+            FILE_LOC: s3_location,
+            FILE_FORMAT: file_format,
+            FILE_SIZE: file_size,
+            MD5: md5,
+            FILE_TYPE: FILE_TYPES[index],
+            ACL: acl
+        }
+
+    # Open the IndexD Manifest File
+    with open(manifestpath, 'w', newline='\n') as indexd_f:
+        manifest_writer = csv.DictWriter(
+            indexd_f, delimiter='\t', fieldnames=MANIFEST_FIELDS)
+        # Write the Header if this is the first time entering the file
+        if indexd_f.tell() == 0:
+            manifest_writer.writeheader()
 
         # Generate the GUID
         # After Upload, Generate the Path Location
         # Write all these values to the Manifest File
 
         #
-        # Delete the file once it has been processed
-        os.remove(filename)

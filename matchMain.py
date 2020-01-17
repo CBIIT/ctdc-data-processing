@@ -4,7 +4,8 @@ from treatmentarm import getPatientsByTreatmentArm
 from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
 from datetime import datetime
 import json
-
+import jsonpickle
+import sys
 # Read the Configuration File
 with open('./config/config.json') as config_file:
     data = json.load(config_file)
@@ -45,40 +46,30 @@ print('Secrets Read')
 # Retrieve the Okta Token
 token = get_okta_token(secrets, data, oktaAuthUrl)
 print('Token Obtained')
+
+myPatientList = []
 # Get the List of Patients for Each Arm
-patientsListbyArm = getPatientsByTreatmentArm(armIds, token, matchBaseUrl)
+getPatientsByTreatmentArm(
+    armIds, token, matchBaseUrl, myPatientList)
 print('List of Patients by Arm received')
+
+# Printing List of Patients for Testing
+# print(jsonpickle.encode(myPatientList))
 
 fileListPatientArm = []
 i = 0
 # Get the List of S3 Paths for each patient in each Arm
-while(i < len(armIds)):
-    # print(len(patientsListbyArm[i]))
-    fileListPatientArm.append(getPatientsFileData(
-        patientsListbyArm[i], token, fileProjectionQuery, matchBaseUrlPatient))
-    i += 1
+getPatientsFileData(token, fileProjectionQuery,
+                    matchBaseUrlPatient, myPatientList)
+print('Getting S3 Paths for all Patients in each Arm')
+
 print('List of File Paths received')
-
-# getPatientsFileData(patientsListbyArm[0],token,fileProjectionQuery)
-# print(len(fileListPatientArm[0][0]))
-# signedUrlList=getPatientsPreSignedURL(patientsListbyArm[0][0],fileListPatientArm[0][0],token)
-
-# Get the List of PreSigned URLS for the S3 Paths for each patient in each Arm
-i, j = 0, 0
-signedUrlList = []
-while(i < len(armIds)):
-    templist = []
-    while (j < len(patientsListbyArm[i])):
-        templist.append(getPatientsPreSignedURL(
-            patientsListbyArm[i][j], fileListPatientArm[i][j], token, matchBaseUrlPatient))
-        j += 1
-    signedUrlList.append(templist)
-    i += 1
+getPatientsPreSignedURL(token, matchBaseUrlPatient, myPatientList)
+# Exiting Code
+print(jsonpickle.encode(myPatientList))
+sys.exit(0)
 print('PreSigned Urls Generated')
-# print(signedUrlList[0][1])
-# Generating a Sample Signed URL to test FileName Parsing
-signedUrlSample = signedUrlList[0][1][0]
-print(signedUrlSample.split("?")[0].split('/')[::-1][0])
+
 i, j = 0, 0
 # Getting Bucket Name to upload files
 bucketName = secrets["S3_DEST_BUCKET_NAME"]
@@ -88,11 +79,14 @@ print('Uploading Files...')
 manifest_filename = 'Manifest' + \
     str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.csv'
 # For all Arms
-while(i < len(armIds)):
-    # For all Patients per Arm
-    while (j < len(patientsListbyArm[i])):
-        # Upload file
-        uploadPatientFiles(signedUrlList[i][j],
-                           acls[i], bucketName, manifest_filename)
+# while(i < len(armIds)):
+#     # For all Patients per Arm
+#     total_patients_for_arm = len(patientsListbyArm[i])
+#     while (j < len(patientsListbyArm[i])):
+#         # Upload file
+#         print(f"Uploading file for Patient {j} of {total_patients_for_arm}")
+#         uploadPatientFiles(signedUrlList[i][j],
+#                            acls[i], bucketName, manifest_filename)
+#         j += 1
 
 print('Uploading Files Completed!')
