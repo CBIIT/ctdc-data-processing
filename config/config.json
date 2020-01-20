@@ -11,6 +11,11 @@
 		"phs001859",
 		"phs001926"
 	],
+	"bucketNames": [
+		"amit-gallery",
+		"amit-gallery"
+	],
+	"domain": "trialcommons.cancer.gov",
 	"matchUatBaseUrlPatient": "https://api.match-uat.nci.nih.gov/api/v1/patients/",
 	"fileProjectionQuery": "biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.status",
 	"secretNameProd": "Okta-Prod-Secrets",

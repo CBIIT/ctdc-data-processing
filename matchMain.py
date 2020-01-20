@@ -15,6 +15,8 @@ region = data['region']
 # Get List of Arms
 armIds = data['armIds']
 acls = data['phsIds']
+bucketNames = data["bucketNames"]
+domain = data["domain"]
 if((data['useProd']) == 'TRUE'):
     print('Using Match Production Environment')
     # Get the Secret Name
@@ -50,7 +52,7 @@ print('Token Obtained')
 myPatientList = []
 # Get the List of Patients for Each Arm
 getPatientsByTreatmentArm(
-    armIds, token, matchBaseUrl, myPatientList)
+    armIds, token, matchBaseUrl, myPatientList, acls, bucketNames)
 print('List of Patients by Arm received')
 
 # Printing List of Patients for Testing
@@ -65,12 +67,9 @@ print('Getting S3 Paths for all Patients in each Arm')
 
 print('List of File Paths received')
 getPatientsPreSignedURL(token, matchBaseUrlPatient, myPatientList)
-# Exiting Code
-print(jsonpickle.encode(myPatientList))
-sys.exit(0)
+
 print('PreSigned Urls Generated')
 
-i, j = 0, 0
 # Getting Bucket Name to upload files
 bucketName = secrets["S3_DEST_BUCKET_NAME"]
 
@@ -78,15 +77,10 @@ print('Uploading Files...')
 
 manifest_filename = 'Manifest' + \
     str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.csv'
-# For all Arms
-# while(i < len(armIds)):
-#     # For all Patients per Arm
-#     total_patients_for_arm = len(patientsListbyArm[i])
-#     while (j < len(patientsListbyArm[i])):
-#         # Upload file
-#         print(f"Uploading file for Patient {j} of {total_patients_for_arm}")
-#         uploadPatientFiles(signedUrlList[i][j],
-#                            acls[i], bucketName, manifest_filename)
-#         j += 1
 
+uploadPatientFiles(manifest_filename, myPatientList, domain)
+# Exiting Code
+print(jsonpickle.encode(myPatientList))
+sys.exit(0)
+i, j = 0, 0
 print('Uploading Files Completed!')

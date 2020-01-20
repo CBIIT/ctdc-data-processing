@@ -2,7 +2,7 @@ import requests
 from patient import Patient
 
 
-def getPatientsByTreatmentArm(arms=[], token='', matchBaseUrl='', patientInputList=[]):
+def getPatientsByTreatmentArm(arms=[], token='', matchBaseUrl='', patientInputList=[], acls=[], bucketNames=[]):
     """
     This function gets a list of patients for each arm
     specified by the list of Patient Arms in arms. The
@@ -14,12 +14,12 @@ def getPatientsByTreatmentArm(arms=[], token='', matchBaseUrl='', patientInputLi
     headers = {'Authorization': token}
 
     # Retrieve the Patient List for each Arm
-    for arm in (arms):
+    for index, arm in enumerate(arms):
         url = matchBaseUrl+arm
         r = requests.get(url, headers=headers)
         response = r.json()
-        plist = []
+
         for items in (response):
-            plist.append(items['patientSequenceNumber'])
+
             patientInputList.append(
-                Patient(items['patientSequenceNumber'], arm))
+                Patient(items['patientSequenceNumber'], arm, acls[index], bucketNames[index]))
