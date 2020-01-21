@@ -90,7 +90,7 @@ class MetaData:
         for biopsy in data.get('biopsies', []):
             for message in biopsy.get('assayMessages', []):
                 obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
-                obj['result'] = message.get('result')
+                obj['result'] = message.get('result', 'UNKNOWN')
                 obj['biomarker'] = message.get('biomarker')
                 objs.append(obj)
         return objs
