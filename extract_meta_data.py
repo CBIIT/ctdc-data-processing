@@ -2,11 +2,12 @@ import csv
 import os
 
 from tokens import get_okta_token
-from secrets import get_secret
-from treatmentarm import getPatientsByTreatmentArm
-from meta_data import get_patient_meta_data
-from config import Config
+
 from bento.common.utils import get_logger
+from config import Config
+from meta_data import get_patient_meta_data
+from secrets import get_secret
+from treatmentarm import getPatientsByTreatmentArm, get_assignment_status_outcome_for_arm
 
 
 CONFIG_FILE_ENVVAR = 'DATA_PROC_CONFIG_FILE'
@@ -204,9 +205,8 @@ class MetaData:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
                         obj = {ARM_ID: arm_id}
+                        obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
                         obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
-                        # Todo: assignmentStatusOutcome seems not exactly the value we want
-                        obj['assignmentStatusOutcome'] = data.get('currentPatientStatus')
                         obj['stepNumber'] = assignment.get('stepNumber')
 
                         arms = assignment.get('patientAssignmentLogic', [])
@@ -397,11 +397,13 @@ class MetaData:
         # Get the List of Patients for Each Arm
         for armID in self.config.armIds:
             patientsListbyArm = getPatientsByTreatmentArm([armID], token, self.config.matchBaseUrl)
+            assignment_status = get_assignment_status_outcome_for_arm(armID, token, self.config.matchArmUrl)
             self.log.info('List of Patients by Arm received')
             for patients in patientsListbyArm:
                 for p in patients:
                     data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, p)
                     data[ARM_ID] = armID
+                    data['assignmentStatusOutcome'] = assignment_status.get(p)
                     self.nodes['case'].extend(self.extract_case(data))
                     nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
                     self.nodes['specimen'].extend(speicimens)

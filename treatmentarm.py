@@ -22,3 +22,27 @@ def getPatientsByTreatmentArm(arms=[],token='',matchBaseUrl=''):
         
         patientList.append(plist) 
     return patientList
+
+
+def get_assignment_status_outcome_for_arm(arm_id='', token='', matchArmUrl=''):
+    """
+    This function gets a dict for assignmentStatusOutcome info for all patients an arm
+    Key is patient's patientSequenceNumber, value is assignmentStatusOutcome
+    The token is the Okta token required for access to the Match
+    Environment
+    """
+    # Set the Headers
+    headers = {'Authorization': token}
+    arm_url = matchArmUrl + arm_id
+    arm_result = requests.get(arm_url, headers=headers)
+    arms = arm_result.json()
+    patients = {}
+    arm_version = ''
+    for arm in arms:
+        current_version = arm.get('version')
+        if arm_version == '' or current_version > arm_version:
+            for patient in arm.get('summaryReport', {}).get('assignmentRecords', []):
+                patients[patient.get('patientSequenceNumber')] = patient.get('assignmentStatusOutcome')
+
+    return patients
+

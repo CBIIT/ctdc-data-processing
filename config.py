@@ -23,6 +23,7 @@ class Config:
             self.matchBaseUrl = self.data['matchUatBaseUrl']
             # Get the Match UAT Patient Api URL
             self.matchBaseUrlPatient = self.data['matchUatBaseUrlPatient']
+            self.matchArmUrl = self.data['matchUatArmUrl']
         else:
             self.log.info('Using Match Production Environment')
             # Get the Secret Name
@@ -33,5 +34,6 @@ class Config:
             self.matchBaseUrl = self.data['matchProdBaseUrl']
             # Get the Match Patient Api URL
             self.matchBaseUrlPatient = self.data['matchProdBaseUrlPatient']
+            self.matchArmUrl = self.data['matchProdArmUrl']
 
 
