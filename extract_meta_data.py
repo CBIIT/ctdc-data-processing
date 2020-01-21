@@ -116,6 +116,7 @@ class MetaData:
                     ion_result = sequence.get('ionReporterResults', {})
                     copy_number_rpt = ion_result.get('copyNumberReport', {})
                     variant_rpt = { 'type': 'variant_report' }
+                    variant_rpt['molecularSequenceNumber'] = copy_number_rpt.get('molecularSequenceNumber', ion_result.get('molecularSequenceNumber'))
                     variant_rpt['jobName'] = ion_result.get('jobName')
                     variant_rpt['mapd'] = copy_number_rpt.get('mapd')
                     variant_rpt['cellularity'] = copy_number_rpt.get('cellularity')
@@ -124,7 +125,6 @@ class MetaData:
 
                     control_panel = ion_result.get('oncomineControlPanel', {})
                     assay = { 'type': 'sequencing_assay' }
-                    assay['jobName'] = ion_result.get('jobName')
                     assay['molecularSequenceNumber'] = control_panel.get('molecularSequenceNumber')
                     if not assay['molecularSequenceNumber']:
                         assay['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
@@ -414,6 +414,7 @@ class MetaData:
         self.nodes['variant_report'] = []
         self.fields['variant_report'] = [
             'type',
+            'molecularSequenceNumber',
             "jobName",
             "mapd",
             "cellularity",
@@ -424,7 +425,6 @@ class MetaData:
         self.fields['sequencing_assay'] = [
             'type',
             'molecularSequenceNumber',
-            'jobName',
             "qc_result"
         ]
 
