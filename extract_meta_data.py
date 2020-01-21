@@ -206,6 +206,8 @@ class MetaData:
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
                         obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
                         obj['stepNumber'] = assignment.get('stepNumber')
+                        for assignment_message in assignment.get('patientAssignmentMessages', []):
+                            obj['stepNumber'] = assignment_message.get('stepNumber', obj['stepNumber'])
 
                         arms = assignment.get('patientAssignmentLogic', [])
                         for arm in arms:
