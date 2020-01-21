@@ -112,6 +112,7 @@ class MetaData:
 
                     control_panel = ion_result.get('oncomineControlPanel', {})
                     assay = {}
+                    assay['jobName'] = ion_result.get('jobName')
                     assay['molecularSequenceNumber'] = control_panel.get('molecularSequenceNumber')
                     if not assay['molecularSequenceNumber']:
                         assay['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
@@ -379,6 +380,7 @@ class MetaData:
         self.nodes['sequencing_assay'] = []
         self.fields['sequencing_assay'] = [
             'molecularSequenceNumber',
+            'jobName',
             "qc_result"
         ]
 
