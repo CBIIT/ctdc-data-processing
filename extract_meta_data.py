@@ -45,7 +45,10 @@ class MetaData:
         return delimiter.join([obj[field] for obj in objects])
 
     def extract_case(self, data):
-        obj = {ARM_ID: data[ARM_ID]}
+        obj = {
+            'type': 'case',
+            ARM_ID: data[ARM_ID]
+        }
         obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
@@ -71,13 +74,19 @@ class MetaData:
             for message in biopsy.get('mdAndersonMessages', []):
                 type = message.get('message')
                 if type == 'NUCLEIC_ACID_SENDOUT':
-                    obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
+                    obj = {
+                        'type': 'nucleic_acid',
+                        'biopsySequenceNumber': message.get('biopsySequenceNumber')
+                    }
                     obj['molecularSequenceNumber'] = message.get('molecularSequenceNumber')
                     obj['dnaConcentration'] = message.get('dnaConcentration')
                     obj['dnaVolume'] = message.get('dnaVolume')
                     necleic_acids.append(obj)
                 elif type == 'SPECIMEN_RECEIVED':
-                    obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
+                    obj = {
+                        'type': 'specimen',
+                        'biopsySequenceNumber': message.get('biopsySequenceNumber')
+                    }
                     obj['patientSequenceNumber'] = message.get('patientSequenceNumber')
                     speicmens.append(obj)
                 else:
@@ -89,7 +98,10 @@ class MetaData:
         # There are almost identical information in "patient_assignments/*/assayMessages"
         for biopsy in data.get('biopsies', []):
             for message in biopsy.get('assayMessages', []):
-                obj = {'biopsySequenceNumber': message.get('biopsySequenceNumber')}
+                obj = {
+                    'type': 'ihc_assay_report',
+                    'biopsySequenceNumber': message.get('biopsySequenceNumber')
+                }
                 obj['result'] = message.get('result', 'UNKNOWN')
                 obj['biomarker'] = message.get('biomarker')
                 objs.append(obj)
@@ -103,7 +115,7 @@ class MetaData:
                 if sequence.get('status') == 'CONFIRMED':
                     ion_result = sequence.get('ionReporterResults', {})
                     copy_number_rpt = ion_result.get('copyNumberReport', {})
-                    variant_rpt = {}
+                    variant_rpt = { 'type': 'variant_report' }
                     variant_rpt['jobName'] = ion_result.get('jobName')
                     variant_rpt['mapd'] = copy_number_rpt.get('mapd')
                     variant_rpt['cellularity'] = copy_number_rpt.get('cellularity')
@@ -111,7 +123,7 @@ class MetaData:
                     variant_reports.append(variant_rpt)
 
                     control_panel = ion_result.get('oncomineControlPanel', {})
-                    assay = {}
+                    assay = { 'type': 'sequencing_assay' }
                     assay['jobName'] = ion_result.get('jobName')
                     assay['molecularSequenceNumber'] = control_panel.get('molecularSequenceNumber')
                     if not assay['molecularSequenceNumber']:
@@ -151,23 +163,35 @@ class MetaData:
                     variant_report = sequence.get('ionReporterResults', {}).get('variantReport', {})
                     job_name = sequence.get('ionReporterResults', {}).get('jobName')
                     for report in variant_report.get('singleNucleotideVariants', []):
-                        obj = {'jobName': job_name}
+                        obj = {
+                            'type': 'snv_variant',
+                            'jobName': job_name
+                        }
                         self.fill_in_variant_obj(obj, report)
                         snv_variants.append(obj)
                     for report in variant_report.get('indels', []):
-                        obj = {'jobName': job_name}
+                        obj = {
+                            'type': 'indel_variant',
+                            'jobName': job_name
+                        }
                         self.fill_in_variant_obj(obj, report)
                         indel_variants.append(obj)
                     # TODO: delins_variant doesn't exists in variant report
                     if 'delins_variant' in variant_report:
                         self.log.warning('delins_variant actually exists!')
                         for report in variant_report.get('delins_variant', []):
-                            obj = {'jobName': job_name}
+                            obj = {
+                                'type': 'delins_variant',
+                                'jobName': job_name
+                            }
                             self.fill_in_variant_obj(obj, report)
                             delins_variants.append(obj)
 
                     for report in variant_report.get('copyNumberVariants', []):
-                        obj = {'jobName': job_name}
+                        obj = {
+                            'type': 'copy_number_variant',
+                            'jobName': job_name
+                        }
                         obj['identifier'] = report.get('identifier')
                         obj['gene'] = report.get('gene')
                         obj['chromosome'] = report.get('chromosome')
@@ -180,7 +204,10 @@ class MetaData:
                         copy_number_variants.append(obj)
 
                     for report in variant_report.get('unifiedGeneFusions', []):
-                        obj = {'jobName': job_name}
+                        obj = {
+                            'type': 'gene_fusion_variant',
+                            'jobName': job_name
+                        }
                         obj['identifier'] = report.get('identifier')
                         obj['partnerGene'] = report.get('partnerGene')
                         obj['partnerReadCount'] = report.get('partnerReadCount')
@@ -202,7 +229,10 @@ class MetaData:
                 if treatment_arm:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
-                        obj = {ARM_ID: arm_id}
+                        obj = {
+                            'type': 'assignment_report',
+                            ARM_ID: arm_id
+                        }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
                         obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
                         obj['stepNumber'] = assignment.get('stepNumber')
@@ -246,6 +276,7 @@ class MetaData:
         self.nodes = {}
         self.nodes['case'] = []
         self.fields['case'] = [
+            'type',
             ARM_ID,
             'patientSequenceNumber',
             'gender',
@@ -262,12 +293,14 @@ class MetaData:
 
         self.nodes['specimen'] = []
         self.fields['specimen'] = [
+            'type',
             'patientSequenceNumber',
             'biopsySequenceNumber'
         ]
 
         self.nodes['nucleic_acid'] = []
         self.fields['nucleic_acid'] = [
+            'type',
             'biopsySequenceNumber',
             'molecularSequenceNumber',
             'dnaConcentration',
@@ -276,6 +309,7 @@ class MetaData:
 
         self.nodes['ihc_assay_report'] = []
         self.fields['ihc_assay_report'] = [
+            'type',
             'biopsySequenceNumber',
             'biomarker',
             'result'
@@ -283,6 +317,7 @@ class MetaData:
 
         self.nodes['snv_variant'] = []
         self.fields['snv_variant'] = [
+            'type',
             "jobName",
             "identifier",
             "gene",
@@ -302,6 +337,7 @@ class MetaData:
 
         self.nodes['delins_variant'] = []
         self.fields['delins_variant'] = [
+            'type',
             "jobName",
             "identifier",
             "gene",
@@ -320,6 +356,7 @@ class MetaData:
 
         self.nodes['indel_variant'] = []
         self.fields['indel_variant'] = [
+            'type',
             "jobName",
             "identifier",
             "gene",
@@ -338,6 +375,7 @@ class MetaData:
 
         self.nodes['copy_number_variant'] = []
         self.fields['copy_number_variant'] = [
+            'type',
             "jobName",
             "identifier",
             "gene",
@@ -351,6 +389,7 @@ class MetaData:
 
         self.nodes['gene_fusion_variant'] = []
         self.fields['gene_fusion_variant'] = [
+            'type',
             "jobName",
             "identifier",
             "partnerGene",
@@ -362,6 +401,7 @@ class MetaData:
 
         self.nodes['assignment_report'] = []
         self.fields['assignment_report'] = [
+            'type',
             ARM_ID,
             "patientSequenceNumber",
             "biopsySequenceNumber",
@@ -373,6 +413,7 @@ class MetaData:
 
         self.nodes['variant_report'] = []
         self.fields['variant_report'] = [
+            'type',
             "jobName",
             "mapd",
             "cellularity",
@@ -381,6 +422,7 @@ class MetaData:
 
         self.nodes['sequencing_assay'] = []
         self.fields['sequencing_assay'] = [
+            'type',
             'molecularSequenceNumber',
             'jobName',
             "qc_result"
