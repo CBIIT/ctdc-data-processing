@@ -104,9 +104,6 @@ class MetaData:
                     ion_result = sequence.get('ionReporterResults', {})
                     copy_number_rpt = ion_result.get('copyNumberReport', {})
                     variant_rpt = {}
-                    variant_rpt['molecularSequenceNumber'] = copy_number_rpt.get('molecularSequenceNumber')
-                    if not variant_rpt['molecularSequenceNumber']:
-                        variant_rpt['molecularSequenceNumber'] = ion_result.get('molecularSequenceNumber')
                     variant_rpt['jobName'] = ion_result.get('jobName')
                     variant_rpt['mapd'] = copy_number_rpt.get('mapd')
                     variant_rpt['cellularity'] = copy_number_rpt.get('cellularity')
@@ -373,7 +370,6 @@ class MetaData:
 
         self.nodes['variant_report'] = []
         self.fields['variant_report'] = [
-            'molecularSequenceNumber',
             "jobName",
             "mapd",
             "cellularity",
