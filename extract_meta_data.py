@@ -31,8 +31,9 @@ class MetaData:
     @staticmethod
     def get_prior_drugs(desc):
         drugs = []
-        for drug in desc:
-            drugs.append(drug[DRUGS][0][DRUG_NAME])
+        if isinstance(desc, list):
+            for drug in desc:
+                drugs.append(drug[DRUGS][0][DRUG_NAME])
         return DELIMITER.join(drugs)
 
     def get_fields(self, props):
