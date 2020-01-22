@@ -12,8 +12,8 @@
 		"phs001926"
 	],
 	"bucketNames": [
-		"amit-gallery",
-		"amit-gallery"
+		"sample-bucket1",
+		"sample-bucket2"
 	],
 	"domain": "trialcommons.cancer.gov",
 	"matchUatBaseUrlPatient": "https://api.match-uat.nci.nih.gov/api/v1/patients/",
