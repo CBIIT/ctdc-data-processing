@@ -12,17 +12,15 @@
 		"phs001926"
 	],
 	"bucketNames": [
-		"amit-gallery",
-		"amit-gallery"
+		"sample-bucket1",
+		"sample-bucket2"
 	],
 	"domain": "trialcommons.cancer.gov",
 	"matchUatBaseUrlPatient": "https://api.match-uat.nci.nih.gov/api/v1/patients/",
-	"matchUatArmUrl": "https://api.match-uat.nci.nih.gov/api/v1/treatment_arms/",
 	"fileProjectionQuery": "biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.status",
 	"secretNameProd": "Okta-Prod-Secrets",
 	"oktaAuthUrlProd": "https://bioappdev.okta.com/oauth2/aus1ii93gmb13QrEw297/v1/token",
 	"matchProdBaseUrl": "https://api.match.nci.nih.gov/api/v1/patients/by_treatment_arm/",
 	"matchProdBaseUrlPatient": "https://api.match.nci.nih.gov/api/v1/patients/",
-	"matchProdArmUrl": "https://api.match.nci.nih.gov/api/v1/treatment_arms/",
 	"useProd": "FALSE"
 }
