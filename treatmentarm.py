@@ -44,3 +44,23 @@ def get_assignment_status_outcome_for_arm(arm_id='', token='', matchArmUrl=''):
                 patients[patient.get('patientSequenceNumber')] = patient.get('assignmentStatusOutcome')
 
     return patients
+
+
+def get_patient_ids_by_treatment_arm(arm, token='', matchBaseUrl=''):
+    """
+    This function gets a list of patients for arm
+    specified by the ID. The token is the Okta token
+    required for access to the Match Environment
+    """
+    print(matchBaseUrl)
+    # Set the Headers
+    headers = {'Authorization': token}
+    patient_list = []
+    # Retrieve the Patient List for each Arm
+    url = matchBaseUrl + arm
+    r = requests.get(url, headers=headers)
+    response = r.json()
+    for items in (response):
+        patient_list.append(items['patientSequenceNumber'])
+
+    return patient_list
