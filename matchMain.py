@@ -4,12 +4,19 @@ from treatmentarm import getPatientsByTreatmentArm
 from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
 from datetime import datetime
 import json
+import argparse
 import jsonpickle
 import sys
 
+# Specifying argument parsing from the command line
+parser = argparse.ArgumentParser(
+    description='Configuration File to run the File Uploader')
+parser.add_argument("--file", required=True, type=str,
+                    help="Name of Configuration File to run the File Uploader")
+args = parser.parse_args()
 try:
         # Read the Configuration File
-    with open('./config/config.json') as config_file:
+    with open(args.file) as config_file:
         data = json.load(config_file)
 
     # Read the region
