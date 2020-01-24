@@ -157,19 +157,23 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='Fa
 
         # Write the Header Row
         manifest_writer.writeheader()
+        totalPatients = len(myPatientList)
         # Process each Patient in the list
-        for patient in myPatientList:
+        for index, patient in enumerate(myPatientList):
+            print(f'Uploading Data for Patient {index} of {totalPatients}')
             # Get the name of the bucket
             bucket = patient.bucket
             for fileData in (patient.files):
                 # Get the File using the PreSigned URL
                 url = fileData['download_url']
                 r = requests.get(url, stream=True)
-                if (r.status_code >= 400):
-                    print(f'Http Error Code {r.status_code}')
 
                 # Get the Filename from the PreSigned URL
                 filename = url.split("?")[0].split('/')[::-1][0]
+                # If Error is found and we are in Prod Print and Exit
+                if (r.status_code >= 400 and useProd == 'True'):
+                    print(f'Http Error Code {r.status_code} for file {filename}')
+                    sys.exit(1)
 
                 # Creating a pseudo variable for Non Production Test Data for different File types
                 if(useProd == 'False'):
@@ -219,10 +223,10 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='Fa
                 file_format = (os.path.splitext(filenameToUpload)
                                [1]).split('.')[1].lower()
                 # Calculating the SHA512
-                currentDirectory = os.getcwd()
-                sha512 = get_sha512(currentDirectory+'\\'+filenameToUpload)
+                #currentDirectory = os.getcwd()
+                sha512 = get_sha512(os.path.abspath(filenameToUpload))
                 # Delete the file once it has been processed
-                print(f'Processed File {filename} ')
+                print(f'Processed File with S3 Key {s3_key} ')
                 # Extract the ACL from the acls provided
                 acl = "[{}]".format(patient.acls)
                 # Generate the UUID and GUID using the SHA calculated
@@ -246,7 +250,7 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='Fa
                     MSN: msn
 
                 }
-                print(jsonpickle.encode(fileInfo))
+                # print(jsonpickle.encode(fileInfo))
                 # Write the entry into the Manifest file
                 manifest_writer.writerow(fileInfo)
                 # For Production Data Delete the File after Processing
