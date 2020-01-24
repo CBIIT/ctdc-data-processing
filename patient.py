@@ -29,7 +29,7 @@ FILE_TYPE = "file_type"
 MD5SUM = "md5sum"
 CASE_ID = "case_id"
 FILE_STATUS = "file_status"
-MSN = "molecularSequenceNumber"
+MSN = "sequencing_assay.molecularSequenceNumber"
 
 INDEXD_GUID_PREFIX = 'dg.4DFC/'
 MANIFEST_FIELDS = [GUID, UUID, MD5, MD5SUM, TYPE, SIZE,

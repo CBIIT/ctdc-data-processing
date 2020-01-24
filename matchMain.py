@@ -27,7 +27,11 @@ try:
     bucketNames = data["bucketNames"]
     domain = data["domain"]
     useProd = data["useProd"]
-    if((data['useProd']) == 'TRUE'):
+    # Error Handling Code
+    if((len(armIds)==len(acls)==len(bucketNames)) == False):
+        print(f"Number of Arms, ACLs and Bucket Names ")
+        
+    if((data['useProd']) == 'True'):
         print('Using Match Production Environment')
         # Get the Secret Name
         secret_name = data['secretNameProd']
