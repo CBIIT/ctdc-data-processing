@@ -141,7 +141,7 @@ def getPatientS3Paths(data, patientFromList=None):
                     patientFromList.files.append(fileInfo)
 
 
-def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='False'):
+def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=False):
     """
     This function uploads a set of files file pointed to from the Presigned 
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
@@ -171,12 +171,12 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='Fa
                 # Get the Filename from the PreSigned URL
                 filename = url.split("?")[0].split('/')[::-1][0]
                 # If Error is found and we are in Prod Print and Exit
-                if (r.status_code >= 400 and useProd == 'True'):
+                if (r.status_code >= 400 and useProd):
                     print(f'Http Error Code {r.status_code} for file {filename}')
                     sys.exit(1)
 
                 # Creating a pseudo variable for Non Production Test Data for different File types
-                if(useProd == 'False'):
+                if not useProd:
                     if(fileData["type"] == 'DNABam'):
                         filenameToUpload = './samples/SampleFile.bam'
                     if(fileData["type"] == 'RNABam'):
@@ -254,6 +254,6 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd='Fa
                 # Write the entry into the Manifest file
                 manifest_writer.writerow(fileInfo)
                 # For Production Data Delete the File after Processing
-                if(useProd == True):
+                if useProd:
                     if os.path.exists(filename):
                         os.remove(filename)

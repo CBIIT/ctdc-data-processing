@@ -31,7 +31,7 @@ try:
     if((len(armIds)==len(acls)==len(bucketNames)) == False):
         print(f"Number of Arms, ACLs and Bucket Names ")
         
-    if((data['useProd']) == 'True'):
+    if useProd:
         print('Using Match Production Environment')
         # Get the Secret Name
         secret_name = data['secretNameProd']

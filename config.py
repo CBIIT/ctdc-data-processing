@@ -13,7 +13,7 @@ class Config:
         self.region = self.data['region']
         # Get List of Arms
         self.armIds = self.data['armIds']
-        if self.data['useProd'] == 'FALSE':
+        if self.data['useProd'] == False:
             self.log.info('Using Match UAT Environment')
             # Get the Secret Name UAT
             self.secret_name = self.data['secretName']
