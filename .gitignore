@@ -141,3 +141,4 @@ coverage.xml
 
 venv/
 tmp/
+config/config.json
