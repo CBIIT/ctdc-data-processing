@@ -8,7 +8,7 @@ from config import Config
 from meta_data import get_patient_meta_data
 from secrets import get_secret
 from treatmentarm import get_patient_ids_by_treatment_arm, get_assignment_status_outcome_for_arm
-
+from bento.common.s3 import S3Bucket
 
 CONFIG_FILE_ENVVAR = 'DATA_PROC_CONFIG_FILE'
 JOIN = 'join'
@@ -25,8 +25,10 @@ ARM_ID = 'arm_id'
 class MetaData:
     def __init__(self, config):
         self.log = get_logger('Meta Data')
+        assert isinstance(config, Config)
         self.config = config
         self.fields = {}
+        self.bucket = S3Bucket(self.config.metaDataBucket)
 
     @staticmethod
     def get_prior_drugs(desc):
@@ -36,6 +38,7 @@ class MetaData:
                 drugs.append(drug[DRUGS][0][DRUG_NAME])
         return DELIMITER.join(drugs)
 
+    @staticmethod
     def get_fields(self, props):
         fields = [k for k in props.keys()]
         fields.append(ARM_ID)
@@ -263,7 +266,22 @@ class MetaData:
         return objs
 
 
+    def get_s3_key(self, file_path):
+        file_name = os.path.basename(file_path)
+        path = os.path.join(self.config.metaDataPath, file_name)
+        return  path
+
+    def upload_files(self, file_list):
+        assert isinstance(file_list, list)
+        for file in file_list:
+            key = self.get_s3_key(file)
+            self.log.info('Uploading {} to s3://{}{}'.format(file, self.bucket.bucket_name, key))
+            obj = self.bucket.upload_file(key, file)
+            if not obj:
+                self.log.error('Upload {} FAILED'.format(file, self.bucket.bucket_name, key))
+
     def write_files(self):
+        file_list = []
         for node in self.nodes.keys():
             file_name = 'tmp/{}.csv'.format(node)
             self.log.info('Writing {} data into "{}"'.format(node, file_name))
@@ -273,6 +291,8 @@ class MetaData:
 
                 for obj in self.nodes[node]:
                     writer.writerow(obj)
+                file_list.append(file_name)
+        return file_list
 
 
     def prepare(self):
@@ -466,7 +486,8 @@ class MetaData:
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
 
-        self.write_files()
+        file_list = self.write_files()
+        self.upload_files(file_list)
 
 
 if __name__ == '__main__':

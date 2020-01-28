@@ -13,6 +13,8 @@ class Config:
         self.region = self.data['region']
         # Get List of Arms
         self.armIds = self.data['armIds']
+        self.metaDataPath = self.data['metaDataPath']
+        self.metaDataBucket = self.data['metaDataBucket']
         if self.data['useProd'] == False:
             self.log.info('Using Match UAT Environment')
             # Get the Secret Name UAT
