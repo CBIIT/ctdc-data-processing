@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 
 from tokens import get_okta_token
 
@@ -150,10 +151,15 @@ class MetaData:
         obj['alternative'] = report.get('alternative')
         obj['alleleFrequency'] = report.get('alleleFrequency')
         obj['transcript'] = report.get('transcript')
-        obj['hgvs'] = report.get('hgvs')
+        obj['hgvs'] = report.get('hgvs', '')
         obj['oncominevariantclass'] = report.get('oncominevariantclass')
         obj['function'] = report.get('function')
         obj['protein'] = report.get('protein')
+
+    @staticmethod
+    def is_del_ins_variant(obj):
+        hgvs = obj.get('hgvs', '')
+        return re.search(r'del[ATGCN]*ins[ATGCN]+$', hgvs)
 
     def extract_variants(self, data):
         snv_variants = []
@@ -173,24 +179,24 @@ class MetaData:
                             'variant_report.jobName': job_name
                         }
                         self.fill_in_variant_obj(obj, report)
-                        snv_variants.append(obj)
+                        if self.is_del_ins_variant(obj):
+                            self.log.info(f'Found delins variant in a snv invariant! hgvs: {obj["hgvs"]}')
+                            obj['type'] = 'delins_variant'
+                            delins_variants.append(obj)
+                        else:
+                            snv_variants.append(obj)
                     for report in variant_report.get('indels', []):
                         obj = {
                             'type': 'indel_variant',
                             'variant_report.jobName': job_name
                         }
                         self.fill_in_variant_obj(obj, report)
-                        indel_variants.append(obj)
-                    # TODO: delins_variant doesn't exists in variant report
-                    if 'delins_variant' in variant_report:
-                        self.log.warning('delins_variant actually exists!')
-                        for report in variant_report.get('delins_variant', []):
-                            obj = {
-                                'type': 'delins_variant',
-                                'variant_report.jobName': job_name
-                            }
-                            self.fill_in_variant_obj(obj, report)
+                        if self.is_del_ins_variant(obj):
+                            self.log.info(f'Found delins variant in an indel invariant! hgvs: {obj["hgvs"]}')
+                            obj['type'] = 'delins_variant'
                             delins_variants.append(obj)
+                        else:
+                            indel_variants.append(obj)
 
                     for report in variant_report.get('copyNumberVariants', []):
                         obj = {
