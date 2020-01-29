@@ -83,7 +83,7 @@ try:
 
     print('Uploading Files...')
 
-    manifest_filename = 'Manifest' + \
+    manifest_filename = 'tmp/Manifest' + \
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
     uploadPatientFiles(manifest_filename, myPatientList, domain, useProd)
