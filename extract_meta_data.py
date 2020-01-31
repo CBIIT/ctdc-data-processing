@@ -318,6 +318,11 @@ class MetaData:
             obj = self.bucket.upload_file(key, file)
             if not obj:
                 self.log.error('Upload {} FAILED'.format(file, self.bucket.bucket_name, key))
+            else:
+                if obj.get('skipped'):
+                    self.log.info('File skipped.')
+                else:
+                    self.log.info('File uploaded.')
 
     def write_files(self):
         file_list = []
