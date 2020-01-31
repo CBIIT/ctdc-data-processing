@@ -149,7 +149,6 @@ class MetaData:
         obj['position'] = report.get('position')
         obj['reference'] = report.get('reference')
         obj['alternative'] = report.get('alternative')
-        obj['alleleFrequency'] = report.get('alleleFrequency')
         obj['transcript'] = report.get('transcript')
         obj['hgvs'] = report.get('hgvs', '')
         obj['oncominevariantclass'] = report.get('oncominevariantclass')
@@ -182,8 +181,10 @@ class MetaData:
                         if self.is_del_ins_variant(obj):
                             self.log.info(f'Found delins variant in a snv invariant! hgvs: {obj["hgvs"]}')
                             obj['type'] = 'delins_variant'
+                            obj['delins_variant_of$alleleFrequency'] = report.get('alleleFrequency')
                             delins_variants.append(obj)
                         else:
+                            obj['snv_variant_of$alleleFrequency'] = report.get('alleleFrequency')
                             snv_variants.append(obj)
                     for report in variant_report.get('indels', []):
                         obj = {
@@ -194,8 +195,10 @@ class MetaData:
                         if self.is_del_ins_variant(obj):
                             self.log.info(f'Found delins variant in an indel invariant! hgvs: {obj["hgvs"]}')
                             obj['type'] = 'delins_variant'
+                            obj['delins_variant_of$alleleFrequency'] = report.get('alleleFrequency')
                             delins_variants.append(obj)
                         else:
+                            obj['indel_variant_of$alleleFrequency'] = report.get('alleleFrequency')
                             indel_variants.append(obj)
 
                     for report in variant_report.get('copyNumberVariants', []):
@@ -206,9 +209,9 @@ class MetaData:
                         obj['identifier'] = report.get('identifier')
                         obj['gene'] = report.get('gene')
                         obj['chromosome'] = report.get('chromosome')
-                        obj['copyNumber'] = report.get('copyNumber')
-                        obj['confidenceInterval5percent'] = report.get('confidenceInterval5percent')
-                        obj['confidenceInterval95percent'] = report.get('confidenceInterval95percent')
+                        obj['copy_number_variant_of$copyNumber'] = report.get('copyNumber')
+                        obj['copy_number_variant_of$confidenceInterval5percent'] = report.get('confidenceInterval5percent')
+                        obj['copy_number_variant_of$confidenceInterval95percent'] = report.get('confidenceInterval95percent')
                         obj['oncominevariantclass'] = report.get('oncominevariantclass')
                         obj['cancerGeneType'] = report.get('cancerGeneType')
 
@@ -221,9 +224,9 @@ class MetaData:
                         }
                         obj['identifier'] = report.get('identifier')
                         obj['partnerGene'] = report.get('partnerGene')
-                        obj['partnerReadCount'] = report.get('partnerReadCount')
+                        obj['gene_fusion_variant_of$partnerReadCount'] = report.get('partnerReadCount')
                         obj['driverGene'] = report.get('driverGene')
-                        obj['driverReadCount'] = report.get('driverReadCount')
+                        obj['gene_fusion_variant_of$driverReadCount'] = report.get('driverReadCount')
                         obj['oncominevariantclass'] = report.get('oncominevariantclass')
 
                         gene_fusion_variants.append(obj)
@@ -355,7 +358,7 @@ class MetaData:
             "position",
             "reference",
             "alternative",
-            "alleleFrequency",
+            "snv_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
             "oncominevariantclass",
@@ -375,7 +378,7 @@ class MetaData:
             "position",
             "reference",
             "alternative",
-            "alleleFrequency",
+            "delins_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
             "oncominevariantclass",
@@ -394,7 +397,7 @@ class MetaData:
             "position",
             "reference",
             "alternative",
-            "alleleFrequency",
+            "indel_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
             "oncominevariantclass",
@@ -409,9 +412,9 @@ class MetaData:
             "identifier",
             "gene",
             "chromosome",
-            "copyNumber",
-            "confidenceInterval5percent",
-            "confidenceInterval95percent",
+            "copy_number_variant_of$copyNumber",
+            "copy_number_variant_of$confidenceInterval5percent",
+            "copy_number_variant_of$confidenceInterval95percent",
             "oncominevariantclass",
             "cancerGeneType"
         ]
@@ -422,9 +425,9 @@ class MetaData:
             "variant_report.jobName",
             "identifier",
             "partnerGene",
-            "partnerReadCount",
+            "gene_fusion_variant_of$partnerReadCount",
             "driverGene",
-            "driverReadCount",
+            "gene_fusion_variant_of$driverReadCount",
             "oncominevariantclass"
         ]
 
