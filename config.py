@@ -15,6 +15,7 @@ class Config:
         self.armIds = self.data['armIds']
         self.metaDataPath = self.data['metaDataPath']
         self.metaDataBucket = self.data['metaDataBucket']
+        self.cipher_key = self.data['cipher_key']
         if self.data['useProd'] == False:
             self.log.info('Using Match UAT Environment')
             # Get the Secret Name UAT

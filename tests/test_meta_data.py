@@ -147,6 +147,13 @@ class TestMetaData(unittest.TestCase):
         self.assertTrue(self.meta_data.is_del_ins_variant({'hgvs': 'c.978_980delGTCinsAT'}))
         self.assertTrue(self.meta_data.is_del_ins_variant({'hgvs': 'c.997_1008delGCCAACCGATACinsTTTTAATAAAATAAAA'}))
 
+    def test_cipher(self):
+        self.assertEqual('123', self.meta_data._cipher('012', 1))
+        self.assertEqual('000', self.meta_data._cipher('999', 1))
+        self.assertEqual('222', self.meta_data._cipher('999', 3))
+        self.assertEqual('120', self.meta_data._cipher('019', 1))
+        self.assertEqual('231', self.meta_data._cipher('019', 2))
+
 
 if __name__ == '__main__':
 

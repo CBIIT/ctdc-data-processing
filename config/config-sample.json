@@ -26,5 +26,6 @@
 	"matchProdArmUrl": "https://api.match.nci.nih.gov/api/v1/treatment_arms/",
 	"metaDataBucket": "sample-meta-data-bucket",
 	"metaDataPath": "CTDC/MATCH/UAT",
-	"useProd": false
+	"useProd": false,
+	"cipher_key": 1
 }

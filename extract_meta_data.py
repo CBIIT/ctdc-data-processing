@@ -49,6 +49,36 @@ class MetaData:
     def join_field_in_objects(objects, field, delimiter):
         return delimiter.join([obj[field] for obj in objects])
 
+    @staticmethod
+    def _cipher(data, key):
+        '''
+        Caesar Cipher algorithm, only works for strings contain only numbers
+        Won't work with string contains letters
+
+        :param data: string to be ciphered, can only contain numbers
+        :param key: cipher key, should be integer
+        :return: ciphered string
+        '''
+        assert isinstance(data, str)
+        assert isinstance(key, int)
+        result = ''
+        for c in data:
+            enc = (int(c) + key) % 10
+            result += str(enc)
+
+        return result
+
+    def simple_cipher(self, data):
+        '''
+        Use cipher_key in configuration to do Caesar Cipher
+
+        :param data: string to be ciphered, can only contain numbers
+        :return: ciphered string
+        '''
+        assert isinstance(data, str)
+        return self._cipher(data, self.config.cipher_key)
+
+
     def extract_case(self, data):
         obj = {
             'type': 'case',
