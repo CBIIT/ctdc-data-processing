@@ -10,6 +10,8 @@ import string
 import sys
 from bento.common.utils import get_md5, UUID, get_sha512, get_uuid
 
+from bento.common.s3 import S3Bucket
+
 # Specifying the Constants for the Manifest File
 GUID = 'GUID'
 UUID = 'uuid'
@@ -147,8 +149,6 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=Fal
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
     """
 
-    s3_client = boto3.client('s3')
-
     # Open the IndexD Manifest File
     with open(manifestpath, 'w', newline='\n') as indexd_f:
 
@@ -163,6 +163,7 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=Fal
             print(f'Uploading Data for Patient {index} of {totalPatients}')
             # Get the name of the bucket
             bucket = patient.bucket
+            s3_bucket = S3Bucket(bucket)
             for fileData in (patient.files):
                 # Get the File using the PreSigned URL
                 url = fileData['download_url']
@@ -200,12 +201,9 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=Fal
                 s3_key = msn+'/'+filename
 
                 # Upload File to S3
-                #bucket.upload_file(Filename=filenameToUpload, Key=s3_key)
-                with open(filenameToUpload, 'rb') as file:
-                    s3_client.put_object(Bucket=bucket, Key=s3_key, Body=file)
+                upload_result = s3_bucket.upload_file(s3_key, filenameToUpload)
 
-                md5sum = s3_client.head_object(
-                    Bucket=bucket, Key=s3_key)['ETag'][1:-1]
+                md5sum = upload_result['md5']
 
                 # Calculate MD5 , Size and Bucket Location
                 md5 = get_md5(filenameToUpload)
@@ -230,7 +228,10 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=Fal
                 # Extract the ACL from the acls provided
                 acl = "[{}]".format(patient.acls)
                 # Generate the UUID and GUID using the SHA calculated
-                uuid = get_uuid(domain, "file", sha512)
+                if useProd:
+                    uuid = get_uuid(domain, "file", sha512)
+                else:
+                    uuid = get_uuid(domain, "file", s3_location + sha512)
                 guid = '{}{}'.format(INDEXD_GUID_PREFIX, uuid)
                 # Generate the dictionary to be writtent to the manifest file
                 fileInfo = {
