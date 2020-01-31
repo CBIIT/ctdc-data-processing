@@ -153,6 +153,10 @@ class TestMetaData(unittest.TestCase):
         self.assertEqual('222', self.meta_data._cipher('999', 3))
         self.assertEqual('120', self.meta_data._cipher('019', 1))
         self.assertEqual('231', self.meta_data._cipher('019', 2))
+        self.assertEqual('cde', self.meta_data._cipher('abc', 2))
+        self.assertEqual('zab', self.meta_data._cipher('xyz', 2))
+        self.assertEqual('CDE', self.meta_data._cipher('ABC', 2))
+        self.assertEqual('ZAB', self.meta_data._cipher('XYZ', 2))
 
 
 if __name__ == '__main__':

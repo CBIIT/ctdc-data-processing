@@ -52,7 +52,7 @@ class MetaData:
     @staticmethod
     def _cipher(data, key):
         '''
-        Caesar Cipher algorithm, only works for strings contain only numbers
+        Caesar Cipher algorithm, only works for strings contain only alphanumeric characters
         Won't work with string contains letters
 
         :param data: string to be ciphered, can only contain numbers
@@ -63,7 +63,20 @@ class MetaData:
         assert isinstance(key, int)
         result = ''
         for c in data:
-            enc = (int(c) + key) % 10
+            try:
+                num = int(c)
+                enc = (num + key) % 10
+            except ValueError:
+                if 'A' <= c <= 'Z':
+                    num = ord(c) - ord('A')
+                    enc_num = (num + key) % 26 + ord('A')
+                    enc = chr(enc_num)
+                elif 'a' <= c <= 'z':
+                    num = ord(c) - ord('a')
+                    enc_num = (num + key) % 26 + ord('a')
+                    enc = chr(enc_num)
+                else:
+                    raise Exception(f'"{c}" is not a alphanumeric character!')
             result += str(enc)
 
         return result
@@ -72,7 +85,7 @@ class MetaData:
         '''
         Use cipher_key in configuration to do Caesar Cipher
 
-        :param data: string to be ciphered, can only contain numbers
+        :param data: string to be ciphered, can only contain alphanumeric characters
         :return: ciphered string
         '''
         assert isinstance(data, str)
@@ -84,7 +97,7 @@ class MetaData:
             'type': 'case',
             'arm.arm_id': data[ARM_ID]
         }
-        obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
+        obj['patientSequenceNumber'] = self.simple_cipher(data.get('patientSequenceNumber'))
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
         obj['ethnicity'] = data.get('ethnicity')
@@ -122,7 +135,7 @@ class MetaData:
                         'type': 'specimen',
                         'biopsySequenceNumber': message.get('biopsySequenceNumber')
                     }
-                    obj['case.patientSequenceNumber'] = message.get('patientSequenceNumber')
+                    obj['case.patientSequenceNumber'] = self.simple_cipher(message.get('patientSequenceNumber'))
                     speicmens.append(obj)
                 else:
                     self.log.debug('mdAndersonMessages is not a nucleic_acid or specimen')
@@ -273,12 +286,16 @@ class MetaData:
                 if treatment_arm:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
+                        if arm_id != data['arm_id']:
+                            self.log.warning(f"Patient {data.get('patientSequenceNumber')} was assigned " +
+                                             f"to another arm: {arm_id}, this assignment is ignored!")
+                            continue
                         obj = {
                             'type': 'assignment_report',
                             'arm.arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
-                        obj['patientSequenceNumber'] = data.get('patientSequenceNumber')
+                        obj['patientSequenceNumber'] = self.simple_cipher(data.get('patientSequenceNumber'))
                         obj['stepNumber'] = assignment.get('stepNumber')
                         for assignment_message in assignment.get('patientAssignmentMessages', []):
                             obj['stepNumber'] = assignment_message.get('stepNumber', obj['stepNumber'])
