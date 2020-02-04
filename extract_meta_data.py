@@ -1,3 +1,4 @@
+import argparse
 import csv
 import os
 import re
@@ -552,8 +553,11 @@ class MetaData:
 
 
 if __name__ == '__main__':
-    config_file = os.environ.get(CONFIG_FILE_ENVVAR, 'config/config.json')
-    config = Config(config_file)
+    parser = argparse.ArgumentParser(description='Extract meta data from NCI MATCH API')
+    parser.add_argument("config_file", help="Name of Configuration File to run the File Uploader")
+    args = parser.parse_args()
+
+    config = Config(args.config_file)
 
     meta_data = MetaData(config)
     meta_data.extract()

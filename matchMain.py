@@ -9,14 +9,12 @@ import jsonpickle
 import sys
 
 # Specifying argument parsing from the command line
-parser = argparse.ArgumentParser(
-    description='Configuration File to run the File Uploader')
-parser.add_argument("--file", required=True, type=str,
-                    help="Name of Configuration File to run the File Uploader")
+parser = argparse.ArgumentParser(description='Extract file information from NCI MATCH API, and upload files to CDS bucket')
+parser.add_argument("config_file", help="Name of Configuration File to run the File Uploader")
 args = parser.parse_args()
 try:
         # Read the Configuration File
-    with open(args.file) as config_file:
+    with open(args.config_file) as config_file:
         data = json.load(config_file)
 
     # Read the region
