@@ -2,26 +2,22 @@ import requests
 from patient import Patient
 
 
-def getPatientsByTreatmentArm(arms=[], token='', matchBaseUrl='', patientInputList=[], acls=[], bucketNames=[]):
+def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputList=[], acls=[], bucketNames=[]):
     """
     This function gets a list of patients for each arm
     specified by the list of Patient Arms in arms. The
     token is the Okta token required for access to the Match
     Environment
     """
-    print(matchBaseUrl)
-    # Set the Headers
-    headers = {'Authorization': token}
+    print(matchArmUrl)
 
     # Retrieve the Patient List for each Arm
     for index, arm in enumerate(arms):
-        url = matchBaseUrl+arm
-        r = requests.get(url, headers=headers)
-        response = r.json()
+        patients = get_patients_for_arm(arm, token, matchArmUrl)
 
-        for items in (response):
+        for patient_id in patients:
             patientInputList.append(
-                Patient(items['patientSequenceNumber'], arm, acls[index], bucketNames[index]))
+                Patient(patient_id, arm, acls[index], bucketNames[index]))
 
 def get_patients_for_arm(arm_id='', token='', matchArmUrl=''):
     """

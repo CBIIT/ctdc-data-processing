@@ -36,7 +36,7 @@ try:
         # Get Okta Authorization URL
         oktaAuthUrl = data["oktaAuthUrlProd"]
         # Get the Match Treatment Arm Api URL
-        matchBaseUrl = data['matchProdBaseUrl']
+        matchArmUrl = data['matchProdArmUrl']
         # Get the Match Patient Api URL
         matchBaseUrlPatient = data['matchProdBaseUrlPatient']
     else:
@@ -46,7 +46,7 @@ try:
         # Get Okta UAT Authorization URL
         oktaAuthUrl = data["oktaAuthUrl"]
         # Get the Match UAT Treatment Arm Api URL
-        matchBaseUrl = data['matchUatBaseUrl']
+        matchArmUrl = data['matchUatArmUrl']
         # Get the Match UAT Patient Api URL
         matchBaseUrlPatient = data['matchUatBaseUrlPatient']
 
@@ -63,7 +63,7 @@ try:
     myPatientList = []
     # Get the List of Patients for Each Arm
     getPatientsByTreatmentArm(
-        armIds, token, matchBaseUrl, myPatientList, acls, bucketNames)
+        armIds, token, matchArmUrl, myPatientList, acls, bucketNames)
     print('List of Patients by Arm received')
 
     # Get the List of S3 Paths for each patient in each Arm
