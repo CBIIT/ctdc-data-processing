@@ -32,9 +32,10 @@ MD5SUM = "md5sum"
 CASE_ID = "case_id"
 FILE_STATUS = "file_status"
 MSN = "sequencing_assay.molecularSequenceNumber"
+PSN = 'patientSequenceNumber'
 
 INDEXD_GUID_PREFIX = 'dg.4DFC/'
-MANIFEST_FIELDS = [GUID, UUID, MD5, MD5SUM, TYPE, SIZE,
+MANIFEST_FIELDS = [PSN, GUID, UUID, MD5, MD5SUM, TYPE, SIZE,
                    ACL, URL, FILE_LOC, FILE_NAME, FILE_STATUS, FILE_FORMAT, FILE_TYPE, MSN]
 
 # Subpath for PreSigned URL request
@@ -143,7 +144,7 @@ def getPatientS3Paths(data, patientFromList=None):
                     patientFromList.files.append(fileInfo)
 
 
-def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=False):
+def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
     """
     This function uploads a set of files file pointed to from the Presigned 
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
@@ -235,6 +236,7 @@ def uploadPatientFiles(manifestpath='', myPatientList=[], domain='', useProd=Fal
                 guid = '{}{}'.format(INDEXD_GUID_PREFIX, uuid)
                 # Generate the dictionary to be writtent to the manifest file
                 fileInfo = {
+                    PSN: cipher.simple_cipher(patient.patientId),
                     GUID: guid,
                     UUID: uuid,
                     MD5: md5,

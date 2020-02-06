@@ -8,6 +8,8 @@ import argparse
 import jsonpickle
 import sys
 
+from bento.common.simple_cipher import SimpleCipher
+
 # Specifying argument parsing from the command line
 parser = argparse.ArgumentParser(description='Extract file information from NCI MATCH API, and upload files to CDS bucket')
 parser.add_argument("config_file", help="Name of Configuration File to run the File Uploader")
@@ -17,6 +19,7 @@ try:
     with open(args.config_file) as config_file:
         data = json.load(config_file)
 
+    cipher = SimpleCipher(data['cipher_key'])
     # Read the region
     region = data['region']
     # Get List of Arms
@@ -84,7 +87,7 @@ try:
     manifest_filename = 'tmp/Manifest' + \
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
-    uploadPatientFiles(manifest_filename, myPatientList, domain, useProd)
+    uploadPatientFiles(manifest_filename, myPatientList, domain, useProd, cipher)
     print('Uploading Files Completed!')
     # Exiting Code
     # print(jsonpickle.encode(myPatientList))
