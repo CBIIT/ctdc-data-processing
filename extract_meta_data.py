@@ -11,6 +11,7 @@ from meta_data import get_patient_meta_data
 from secrets import get_secret
 from treatmentarm import get_patients_for_arm
 from bento.common.s3 import S3Bucket
+from bento.common.simple_cipher import SimpleCipher
 
 CONFIG_FILE_ENVVAR = 'DATA_PROC_CONFIG_FILE'
 JOIN = 'join'
@@ -31,6 +32,7 @@ class MetaData:
         self.config = config
         self.fields = {}
         self.bucket = S3Bucket(self.config.metaDataBucket)
+        self.cipher = SimpleCipher(self.config.cipher_key)
 
     @staticmethod
     def get_prior_drugs(desc):
@@ -50,55 +52,13 @@ class MetaData:
     def join_field_in_objects(objects, field, delimiter):
         return delimiter.join([obj[field] for obj in objects])
 
-    @staticmethod
-    def _cipher(data, key):
-        '''
-        Caesar Cipher algorithm, only works for strings contain only alphanumeric characters
-        Won't work with string contains letters
-
-        :param data: string to be ciphered, can only contain numbers
-        :param key: cipher key, should be integer
-        :return: ciphered string
-        '''
-        assert isinstance(data, str)
-        assert isinstance(key, int)
-        result = ''
-        for c in data:
-            try:
-                num = int(c)
-                enc = (num + key) % 10
-            except ValueError:
-                if 'A' <= c <= 'Z':
-                    num = ord(c) - ord('A')
-                    enc_num = (num + key) % 26 + ord('A')
-                    enc = chr(enc_num)
-                elif 'a' <= c <= 'z':
-                    num = ord(c) - ord('a')
-                    enc_num = (num + key) % 26 + ord('a')
-                    enc = chr(enc_num)
-                else:
-                    raise Exception(f'"{c}" is not a alphanumeric character!')
-            result += str(enc)
-
-        return result
-
-    def simple_cipher(self, data):
-        '''
-        Use cipher_key in configuration to do Caesar Cipher
-
-        :param data: string to be ciphered, can only contain alphanumeric characters
-        :return: ciphered string
-        '''
-        assert isinstance(data, str)
-        return self._cipher(data, self.config.cipher_key)
-
 
     def extract_case(self, data):
         obj = {
             'type': 'case',
             'arm.arm_id': data[ARM_ID]
         }
-        obj['patientSequenceNumber'] = self.simple_cipher(data.get('patientSequenceNumber'))
+        obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
         obj['ethnicity'] = data.get('ethnicity')
@@ -136,7 +96,7 @@ class MetaData:
                         'type': 'specimen',
                         'biopsySequenceNumber': message.get('biopsySequenceNumber')
                     }
-                    obj['case.patientSequenceNumber'] = self.simple_cipher(message.get('patientSequenceNumber'))
+                    obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(message.get('patientSequenceNumber'))
                     speicmens.append(obj)
                 else:
                     self.log.debug('mdAndersonMessages is not a nucleic_acid or specimen')
@@ -296,7 +256,7 @@ class MetaData:
                             'arm.arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
-                        obj['patientSequenceNumber'] = self.simple_cipher(data.get('patientSequenceNumber'))
+                        obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
                         obj['stepNumber'] = assignment.get('stepNumber')
                         for assignment_message in assignment.get('patientAssignmentMessages', []):
                             obj['stepNumber'] = assignment_message.get('stepNumber', obj['stepNumber'])
