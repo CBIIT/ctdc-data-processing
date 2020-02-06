@@ -9,7 +9,7 @@ from bento.common.utils import get_logger
 from config import Config
 from meta_data import get_patient_meta_data
 from secrets import get_secret
-from treatmentarm import get_patient_ids_by_treatment_arm, get_assignment_status_outcome_for_arm
+from treatmentarm import get_patients_for_arm
 from bento.common.s3 import S3Bucket
 
 CONFIG_FILE_ENVVAR = 'DATA_PROC_CONFIG_FILE'
@@ -524,13 +524,12 @@ class MetaData:
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
         for armID in self.config.armIds:
-            patients = get_patient_ids_by_treatment_arm(armID, token, self.config.matchBaseUrl)
-            assignment_status = get_assignment_status_outcome_for_arm(armID, token, self.config.matchArmUrl)
+            patients = get_patients_for_arm(armID, token, self.config.matchArmUrl)
             self.log.info('List of Patients by Arm received')
-            for p in patients:
-                data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, p)
+            for patient_id, outcome in patients.items():
+                data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, patient_id)
                 data[ARM_ID] = armID
-                data['assignmentStatusOutcome'] = assignment_status.get(p)
+                data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data))
                 nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
                 self.nodes['specimen'].extend(speicimens)
