@@ -107,6 +107,12 @@ class MetaData:
         # There are almost identical information in "patient_assignments/*/assayMessages"
         for biopsy in data.get('biopsies', []):
             for message in biopsy.get('assayMessages', []):
+                if 'result' not in message:
+                    self.log.debug('IHC report without result, ignored!')
+                    continue
+                if 'reportedDate' not in message:
+                    self.log.warning('IHC report missing result date!')
+
                 obj = {
                     'type': 'ihc_assay_report',
                     'specimen.biopsySequenceNumber': message.get('biopsySequenceNumber')
