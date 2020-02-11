@@ -82,6 +82,11 @@ class MetaData:
         for biopsy in data.get('biopsies', []):
             for message in biopsy.get('mdAndersonMessages', []):
                 type = message.get('message')
+                status = message.get('status', '')
+                if status == 'REJECTED':
+                    # Ignore rejected nucleic_acid or specimen
+                    self.log.info('Ignore nucleic_acid/specimen with "REJECTED" status')
+                    continue
                 if type == 'NUCLEIC_ACID_SENDOUT':
                     obj = {
                         'type': 'nucleic_acid',
