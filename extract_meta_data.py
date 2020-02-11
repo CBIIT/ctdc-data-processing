@@ -59,6 +59,7 @@ class MetaData:
             'arm.arm_id': data[ARM_ID]
         }
         obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
+        obj['patientSequenceNumber_org'] = data.get('patientSequenceNumber')
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
         obj['ethnicity'] = data.get('ethnicity')
@@ -330,6 +331,7 @@ class MetaData:
             'type',
             'arm.arm_id',
             'patientSequenceNumber',
+            'patientSequenceNumber_org',
             'gender',
             'races',
             'ethnicity',
