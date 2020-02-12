@@ -9,7 +9,6 @@ def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputLis
     token is the Okta token required for access to the Match
     Environment
     """
-    print(matchArmUrl)
 
     # Retrieve the Patient List for each Arm
     for index, arm in enumerate(arms):

@@ -63,7 +63,8 @@ try:
     manifest_filename = 'tmp/Manifest' + \
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
-    uploadPatientFiles(manifest_filename, myPatientList, config.domain, config.use_prod, cipher)
+    log.info('Uploading patient files...')
+    uploadPatientFiles(manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
     log.info('Uploading Files Completed!')
 
 

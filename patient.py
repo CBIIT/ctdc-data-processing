@@ -1,16 +1,11 @@
-import requests
-import boto3
 import csv
-import hashlib
 import os
-import jsonpickle
-import json
-import random
-import string
 import sys
-from bento.common.utils import get_md5, UUID, get_sha512, get_uuid
+
+import requests
 
 from bento.common.s3 import S3Bucket
+from bento.common.utils import get_md5, UUID, get_sha512, get_uuid
 
 # Specifying the Constants for the Manifest File
 GUID = 'GUID'
@@ -69,7 +64,6 @@ def getPatientsPreSignedURL(token, matchBaseUrlPatient='', myPatientList=[]):
             r = requests.post(url, json=s3Url, headers=headers)
             # Add a dictionary item for the file object
             file['download_url'] = r.json()['download_url']
-        # print(jsonpickle.encode(patient))
 
 
 def getPatientsFileData(token, projection, matchBaseUrlPatient='', myPatientList=[]):
@@ -144,7 +138,7 @@ def getPatientS3Paths(data, patientFromList=None):
                     patientFromList.files.append(fileInfo)
 
 
-def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
+def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log):
     """
     This function uploads a set of files file pointed to from the Presigned 
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
@@ -161,7 +155,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
         totalPatients = len(myPatientList)
         # Process each Patient in the list
         for index, patient in enumerate(myPatientList):
-            print(f'Uploading Data for Patient {index} of {totalPatients}')
+            log.info(f'Uploading Data for Patient {index} of {totalPatients}')
             # Get the name of the bucket
             bucket = patient.bucket
             s3_bucket = S3Bucket(bucket)
@@ -174,7 +168,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
                 filename = url.split("?")[0].split('/')[::-1][0]
                 # If Error is found and we are in Prod Print and Exit
                 if (r.status_code >= 400 and useProd):
-                    print(f'Http Error Code {r.status_code} for file {filename}')
+                    log.error(f'Http Error Code {r.status_code} for file {filename}')
                     sys.exit(1)
 
                 # Creating a pseudo variable for Non Production Test Data for different File types
@@ -210,10 +204,10 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
                 md5 = get_md5(filenameToUpload)
 
                 if(md5sum != md5):
-                    print(f"Error Uploading file: {filename}")
+                    log.error(f"Error Uploading file: {filename}")
                     sys.exit(1)
 
-                print(f'Uploaded file {filenameToUpload}')
+                log.info(f'Uploaded file {filenameToUpload}')
                 # Get S3 location of the bucket
                 s3_location = "s3://{}/{}".format(patient.bucket, s3_key)
                 # Get the filesize of the downloaded file from MATCHBOX
@@ -225,7 +219,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
                 #currentDirectory = os.getcwd()
                 sha512 = get_sha512(os.path.abspath(filenameToUpload))
                 # Delete the file once it has been processed
-                print(f'Processed File with S3 Key {s3_key} ')
+                log.info(f'Processed File with S3 Key {s3_key} ')
                 # Extract the ACL from the acls provided
                 acl = "[{}]".format(patient.acls)
                 # Generate the UUID and GUID using the SHA calculated
@@ -253,7 +247,6 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher):
                     MSN: msn
 
                 }
-                # print(jsonpickle.encode(fileInfo))
                 # Write the entry into the Manifest file
                 manifest_writer.writerow(fileInfo)
                 # For Production Data Delete the File after Processing
