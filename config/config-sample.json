@@ -3,17 +3,17 @@
 	"secretName": "Okta-Match-UAT-Secrets",
 	"oktaAuthUrl": "https://bioappdev.okta.com/oauth2/aus1hv2ve6fSdm1u7297/v1/token",
 	"matchUatBaseUrl": "https://api.match-uat.nci.nih.gov/api/v1/patients/by_treatment_arm/",
-	"armIds": [
-		"EAY131-Z1D",
-		"EAY131-Q"
-	],
-	"phsIds": [
-		"phs001859",
-		"phs001926"
-	],
-	"bucketNames": [
-		"sample-bucket1",
-		"sample-bucket2"
+	"arms": [
+		{
+			"armId": "EAY131-Z1D",
+			"phsId": "phs001859",
+          	"bucketName": "sample-bucket1"
+		},
+		{
+			"armId": "EAY131-Q",
+			"phsId": "phs001926",
+			"bucketName": "sample-bucket2"
+		}
 	],
 	"domain": "trialcommons.cancer.gov",
 	"matchUatBaseUrlPatient": "https://api.match-uat.nci.nih.gov/api/v1/patients/",

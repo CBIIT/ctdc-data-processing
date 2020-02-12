@@ -2,7 +2,7 @@ import requests
 from patient import Patient
 
 
-def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputList=[], acls=[], bucketNames=[]):
+def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputList=[]):
     """
     This function gets a list of patients for each arm
     specified by the list of Patient Arms in arms. The
@@ -11,12 +11,11 @@ def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputLis
     """
 
     # Retrieve the Patient List for each Arm
-    for index, arm in enumerate(arms):
-        patients = get_patients_for_arm(arm, token, matchArmUrl)
+    for arm in arms:
+        patients = get_patients_for_arm(arm.arm_id, token, matchArmUrl)
 
         for patient_id in patients:
-            patientInputList.append(
-                Patient(patient_id, arm, acls[index], bucketNames[index]))
+            patientInputList.append(Patient(patient_id, arm.arm_id, arm.phs_id, arm.bucket_name))
 
 def get_patients_for_arm(arm_id='', token='', matchArmUrl=''):
     """

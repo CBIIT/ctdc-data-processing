@@ -22,8 +22,6 @@ try:
 
     cipher = SimpleCipher(config.cipher_key)
 
-    assert len(config.arm_ids) == len(config.phs_ids)  == len(config.bucket_names)
-
     if config.use_prod:
         log.info('Using Match Production Environment')
     else:
@@ -41,8 +39,7 @@ try:
 
     myPatientList = []
     # Get the List of Patients for Each Arm
-    getPatientsByTreatmentArm(
-        config.arm_ids, token, config.match_arm_url, myPatientList, config.phs_ids, config.bucket_names)
+    getPatientsByTreatmentArm(config.arms, token, config.match_arm_url, myPatientList)
     log.info('List of Patients by Arm received')
 
     # Get the List of S3 Paths for each patient in each Arm

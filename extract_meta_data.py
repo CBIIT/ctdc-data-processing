@@ -494,12 +494,13 @@ class MetaData:
         token = get_okta_token(secrets, self.config.okta_auth_url)
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
-        for armID in self.config.arm_ids:
-            patients = get_patients_for_arm(armID, token, self.config.match_arm_url)
+        for arm in self.config.arms:
+            arm_id = arm.arm_id
+            patients = get_patients_for_arm(arm_id, token, self.config.match_arm_url)
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():
                 data = get_patient_meta_data(token, self.config.match_base_url_patient, patient_id)
-                data[ARM_ID] = armID
+                data[ARM_ID] = arm_id
                 data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data))
                 nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)

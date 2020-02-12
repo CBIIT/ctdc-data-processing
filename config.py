@@ -2,6 +2,12 @@ import json
 
 from bento.common.utils import get_logger
 
+class Arm:
+    def __init__(self, obj):
+        self.arm_id = obj['armId']
+        self.phs_id = obj['phsId']
+        self.bucket_name = obj['bucketName']
+
 class Config:
     def __init__(self, file_name):
         self.log = get_logger('Configuration')
@@ -12,10 +18,13 @@ class Config:
         # Read the region
         self.region = self.data['region']
         self.domain = self.data['domain']
+
+        # Read arm objects
+        self.arms = []
+        for obj in self.data['arms']:
+            self.arms.append(Arm(obj))
+
         # Get List of Arms
-        self.arm_ids = self.data['armIds']
-        self.bucket_names = self.data['bucketNames']
-        self.phs_ids = self.data['phsIds']
         self.meta_data_path = self.data['metaDataPath']
         self.meta_data_bucket = self.data['metaDataBucket']
         self.cipher_key = self.data['cipher_key']
