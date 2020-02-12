@@ -153,12 +153,24 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
         # Write the Header Row
         manifest_writer.writeheader()
         totalPatients = len(myPatientList)
+
+        if myPatientList:
+            bucket = myPatientList[0].bucket
+            s3_bucket = S3Bucket(bucket)
+        else:
+            log.warning('Empty patient list!')
+            return
+
         # Process each Patient in the list
         for index, patient in enumerate(myPatientList):
             log.info(f'Uploading Data for Patient {index} of {totalPatients}')
+
             # Get the name of the bucket
             bucket = patient.bucket
-            s3_bucket = S3Bucket(bucket)
+            # Only create a new bucket when bucket name is different from current patient's
+            if bucket != s3_bucket.bucket_name:
+                s3_bucket = S3Bucket(bucket)
+
             for fileData in (patient.files):
                 # Get the File using the PreSigned URL
                 url = fileData['download_url']
