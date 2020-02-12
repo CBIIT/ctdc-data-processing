@@ -31,7 +31,7 @@ class MetaData:
         assert isinstance(config, Config)
         self.config = config
         self.fields = {}
-        self.bucket = S3Bucket(self.config.metaDataBucket)
+        self.bucket = S3Bucket(self.config.meta_data_bucket)
         self.cipher = SimpleCipher(self.config.cipher_key)
 
     @staticmethod
@@ -296,7 +296,7 @@ class MetaData:
 
     def get_s3_key(self, file_path):
         file_name = os.path.basename(file_path)
-        path = os.path.join(self.config.metaDataPath, file_name)
+        path = os.path.join(self.config.meta_data_path, file_name)
         return  path
 
     def upload_files(self, file_list):
@@ -491,14 +491,14 @@ class MetaData:
         secrets = get_secret(self.config.region, self.config.secret_name)
         self.log.info('Secrets Read')
         # Retrieve the Okta Token
-        token = get_okta_token(secrets, self.config.data, self.config.oktaAuthUrl)
+        token = get_okta_token(secrets, self.config.okta_auth_url)
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
-        for armID in self.config.armIds:
-            patients = get_patients_for_arm(armID, token, self.config.matchArmUrl)
+        for armID in self.config.arm_ids:
+            patients = get_patients_for_arm(armID, token, self.config.match_arm_url)
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():
-                data = get_patient_meta_data(token, self.config.matchBaseUrlPatient, patient_id)
+                data = get_patient_meta_data(token, self.config.match_base_url_patient, patient_id)
                 data[ARM_ID] = armID
                 data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data))

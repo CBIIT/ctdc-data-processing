@@ -1,97 +1,72 @@
-from bento.common.tokens import get_okta_token
-from bento.common.secrets import get_secret
-from treatmentarm import getPatientsByTreatmentArm
-from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
-from datetime import datetime
-import json
 import argparse
+from datetime import datetime
 
+from bento.common.secrets import get_secret
 from bento.common.simple_cipher import SimpleCipher
+from bento.common.tokens import get_okta_token
+from bento.common.utils import get_logger
+
+from config import Config
+from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
+from treatmentarm import getPatientsByTreatmentArm
+
 
 # Specifying argument parsing from the command line
 parser = argparse.ArgumentParser(description='Extract file information from NCI MATCH API, and upload files to CDS bucket')
 parser.add_argument("config_file", help="Name of Configuration File to run the File Uploader")
 args = parser.parse_args()
-try:
-        # Read the Configuration File
-    with open(args.config_file) as config_file:
-        data = json.load(config_file)
 
-    cipher = SimpleCipher(data['cipher_key'])
-    # Read the region
-    region = data['region']
-    # Get List of Arms
-    armIds = data['armIds']
-    acls = data['phsIds']
-    bucketNames = data["bucketNames"]
-    domain = data["domain"]
-    useProd = data["useProd"]
-    # Error Handling Code
-    if((len(armIds)==len(acls)==len(bucketNames)) == False):
-        print(f"Number of Arms, ACLs and Bucket Names ")
-        
-    if useProd:
-        print('Using Match Production Environment')
-        # Get the Secret Name
-        secret_name = data['secretNameProd']
-        # Get Okta Authorization URL
-        oktaAuthUrl = data["oktaAuthUrlProd"]
-        # Get the Match Treatment Arm Api URL
-        matchArmUrl = data['matchProdArmUrl']
-        # Get the Match Patient Api URL
-        matchBaseUrlPatient = data['matchProdBaseUrlPatient']
+log = get_logger('MATCH File Extractor')
+try:
+    config = Config(args.config_file)
+
+    cipher = SimpleCipher(config.cipher_key)
+
+    assert len(config.arm_ids) == len(config.phs_ids)  == len(config.bucket_names)
+
+    if config.use_prod:
+        log.info('Using Match Production Environment')
     else:
-        print('Using Match UAT Environment')
-        # Get the Secret Name UAT
-        secret_name = data['secretName']
-        # Get Okta UAT Authorization URL
-        oktaAuthUrl = data["oktaAuthUrl"]
-        # Get the Match UAT Treatment Arm Api URL
-        matchArmUrl = data['matchUatArmUrl']
-        # Get the Match UAT Patient Api URL
-        matchBaseUrlPatient = data['matchUatBaseUrlPatient']
+        log.info('Using Match UAT Environment')
 
     # Get Projection Query to read List of Files
-    fileProjectionQuery = data['fileProjectionQuery']
+    fileProjectionQuery = config.file_prop_projection
 
     # Read Secrets from AWS Secrets Manager
-    secrets = get_secret(region, secret_name)
-    print('Secrets Read')
+    secrets = get_secret(config.region, config.secret_name)
+    log.info('Secrets Read')
     # Retrieve the Okta Token
-    token = get_okta_token(secrets, data, oktaAuthUrl)
-    print('Token Obtained')
+    token = get_okta_token(secrets, config.okta_auth_url)
+    log.info('Token Obtained')
 
     myPatientList = []
     # Get the List of Patients for Each Arm
     getPatientsByTreatmentArm(
-        armIds, token, matchArmUrl, myPatientList, acls, bucketNames)
-    print('List of Patients by Arm received')
+        config.arm_ids, token, config.match_arm_url, myPatientList, config.phs_ids, config.bucket_names)
+    log.info('List of Patients by Arm received')
 
     # Get the List of S3 Paths for each patient in each Arm
     getPatientsFileData(token, fileProjectionQuery,
-                        matchBaseUrlPatient, myPatientList)
-    print('Getting S3 Paths for all Patients in each Arm')
+                        config.match_base_url_patient, myPatientList)
+    log.info('Getting S3 Paths for all Patients in each Arm')
 
-    print('List of File Paths received')
-    getPatientsPreSignedURL(token, matchBaseUrlPatient, myPatientList)
+    log.info('List of File Paths received')
+    getPatientsPreSignedURL(token, config.match_base_url_patient, myPatientList)
 
-    print('PreSigned Urls Generated')
+    log.info('PreSigned Urls Generated')
 
     # Getting Bucket Name to upload files
     bucketName = secrets["S3_DEST_BUCKET_NAME"]
 
-    print('Uploading Files...')
+    log.info('Uploading Files...')
 
     manifest_filename = 'tmp/Manifest' + \
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
-    uploadPatientFiles(manifest_filename, myPatientList, domain, useProd, cipher)
-    print('Uploading Files Completed!')
-    # Exiting Code
-    # print(jsonpickle.encode(myPatientList))
-    # sys.exit(0)
+    uploadPatientFiles(manifest_filename, myPatientList, config.domain, config.use_prod, cipher)
+    log.info('Uploading Files Completed!')
 
 
 except Exception as e:
     # Print the cause of the exception
-    print(e)
+    log.exception(e)

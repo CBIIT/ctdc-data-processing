@@ -11,32 +11,38 @@ class Config:
 
         # Read the region
         self.region = self.data['region']
+        self.domain = self.data['domain']
         # Get List of Arms
-        self.armIds = self.data['armIds']
-        self.metaDataPath = self.data['metaDataPath']
-        self.metaDataBucket = self.data['metaDataBucket']
+        self.arm_ids = self.data['armIds']
+        self.bucket_names = self.data['bucketNames']
+        self.phs_ids = self.data['phsIds']
+        self.meta_data_path = self.data['metaDataPath']
+        self.meta_data_bucket = self.data['metaDataBucket']
         self.cipher_key = self.data['cipher_key']
-        if self.data['useProd'] == False:
+        self.use_prod = self.data['useProd']
+        self.file_prop_projection = self.data['fileProjectionQuery']
+
+        if self.use_prod == False:
             self.log.info('Using Match UAT Environment')
             # Get the Secret Name UAT
             self.secret_name = self.data['secretName']
             # Get Okta UAT Authorization URL
-            self.oktaAuthUrl = self.data["oktaAuthUrl"]
+            self.okta_auth_url = self.data["oktaAuthUrl"]
             # Get the Match UAT Treatment Arm Api URL
-            self.matchBaseUrl = self.data['matchUatBaseUrl']
+            self.match_base_url = self.data['matchUatBaseUrl']
             # Get the Match UAT Patient Api URL
-            self.matchBaseUrlPatient = self.data['matchUatBaseUrlPatient']
-            self.matchArmUrl = self.data['matchUatArmUrl']
+            self.match_base_url_patient = self.data['matchUatBaseUrlPatient']
+            self.match_arm_url = self.data['matchUatArmUrl']
         else:
             self.log.info('Using Match Production Environment')
             # Get the Secret Name
             self.secret_name = self.data['secretNameProd']
             # Get Okta Authorization URL
-            self.oktaAuthUrl = self.data["oktaAuthUrlProd"]
+            self.okta_auth_url = self.data["oktaAuthUrlProd"]
             # Get the Match Treatment Arm Api URL
-            self.matchBaseUrl = self.data['matchProdBaseUrl']
+            self.match_base_url = self.data['matchProdBaseUrl']
             # Get the Match Patient Api URL
-            self.matchBaseUrlPatient = self.data['matchProdBaseUrlPatient']
-            self.matchArmUrl = self.data['matchProdArmUrl']
+            self.match_base_url_patient = self.data['matchProdBaseUrlPatient']
+            self.match_arm_url = self.data['matchProdArmUrl']
 
 
