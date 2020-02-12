@@ -3,12 +3,12 @@ import csv
 import os
 import re
 
-from tokens import get_okta_token
+from bento.common.tokens import get_okta_token
 
 from bento.common.utils import get_logger
 from config import Config
 from meta_data import get_patient_meta_data
-from secrets import get_secret
+from bento.common.secrets import get_secret
 from treatmentarm import get_patients_for_arm
 from bento.common.s3 import S3Bucket
 from bento.common.simple_cipher import SimpleCipher
