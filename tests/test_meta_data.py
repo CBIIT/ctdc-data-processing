@@ -8,7 +8,7 @@ from extract_meta_data import MetaData, CONFIG_FILE_ENVVAR
 
 class TestMetaData(unittest.TestCase):
     def setUp(self):
-        config_file = os.environ.get(CONFIG_FILE_ENVVAR, 'config/config.json')
+        config_file = os.environ.get(CONFIG_FILE_ENVVAR, 'config/config-uat.json')
         config = Config(config_file)
         self.meta_data = MetaData(config)
 
