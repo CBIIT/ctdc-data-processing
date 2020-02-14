@@ -27,9 +27,6 @@ try:
     else:
         log.info('Using Match UAT Environment')
 
-    # Get Projection Query to read List of Files
-    fileProjectionQuery = config.file_prop_projection
-
     # Read Secrets from AWS Secrets Manager
     secrets = get_secret(config.region, config.secret_name)
     log.info('Secrets Read')
@@ -39,16 +36,15 @@ try:
 
     myPatientList = []
     # Get the List of Patients for Each Arm
-    getPatientsByTreatmentArm(config.arms, token, config.match_arm_url, myPatientList)
+    getPatientsByTreatmentArm(config.arms, token, config.match_base_url, myPatientList)
     log.info('List of Patients by Arm received')
 
     # Get the List of S3 Paths for each patient in each Arm
-    getPatientsFileData(token, fileProjectionQuery,
-                        config.match_base_url_patient, myPatientList)
+    getPatientsFileData(token, config.match_base_url, myPatientList)
     log.info('Getting S3 Paths for all Patients in each Arm')
 
     log.info('List of File Paths received')
-    getPatientsPreSignedURL(token, config.match_base_url_patient, myPatientList)
+    getPatientsPreSignedURL(token, config.match_base_url, myPatientList)
 
     log.info('PreSigned Urls Generated')
 

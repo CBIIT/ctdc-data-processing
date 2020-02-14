@@ -33,8 +33,11 @@ INDEXD_GUID_PREFIX = 'dg.4DFC/'
 MANIFEST_FIELDS = [PSN, GUID, UUID, MD5, MD5SUM, TYPE, SIZE,
                    ACL, URL, FILE_LOC, FILE_NAME, FILE_STATUS, FILE_FORMAT, FILE_TYPE, MSN]
 
+FILE_PROPS_PROJECTION = "biopsies.nextGenerationSequences.ionReporterResults.dnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBamFilePath,biopsies.nextGenerationSequences.ionReporterResults.vcfFilePath,biopsies.nextGenerationSequences.ionReporterResults.dnaBaiFilePath,biopsies.nextGenerationSequences.ionReporterResults.rnaBaiFilePath,biopsies.nextGenerationSequences.ionReporterResults.molecularSequenceNumber,biopsies.nextGenerationSequences.status"
+
 # Subpath for PreSigned URL request
-DOWNLOAD_URL_SUBPATH = '/download_url'
+DOWNLOAD_API_PATH = '/download_url'
+PATIENTS_API_PATH = 'patients'
 
 
 class Patient(object):
@@ -46,14 +49,14 @@ class Patient(object):
         self.bucket = bucket
 
 
-def getPatientsPreSignedURL(token, matchBaseUrlPatient='', myPatientList=[]):
+def getPatientsPreSignedURL(token, match_base_url, my_patient_list):
     """
     This function retrieves the Presigned URL for each file for each
     patient in the list of patient objects provided in myPatientList
     """
-    for patient in myPatientList:
+    for patient in my_patient_list:
         # Create the MATCH Api URL
-        url = matchBaseUrlPatient+patient.patientId+DOWNLOAD_URL_SUBPATH
+        url = f'{match_base_url}/{PATIENTS_API_PATH}/{patient.patientId}{DOWNLOAD_API_PATH}'
         # For each file in the patient object
         for file in patient.files:
             s3Url = ({"s3_url": file["s3url"]})
@@ -66,7 +69,7 @@ def getPatientsPreSignedURL(token, matchBaseUrlPatient='', myPatientList=[]):
             file['download_url'] = r.json()['download_url']
 
 
-def getPatientsFileData(token, projection, matchBaseUrlPatient='', myPatientList=[]):
+def getPatientsFileData(token, match_base_url, my_patient_list):
     """
     This function retrieves the relevant files for the list
     of patients specified by myPatientList using the Okta token.
@@ -78,8 +81,8 @@ def getPatientsFileData(token, projection, matchBaseUrlPatient='', myPatientList
     # Set the Headers
     headers = {'Authorization': token}
     # Iterate to retrive the S3 Paths for all patients
-    for patient in myPatientList:
-        url = matchBaseUrlPatient+patient.patientId+'?'+'projection='+projection
+    for patient in my_patient_list:
+        url = f'{match_base_url}/{PATIENTS_API_PATH}/{patient.patientId}?projection={FILE_PROPS_PROJECTION}'
         r = requests.get(url, headers=headers)
         response = r.json()
         getPatientS3Paths(response, patient)
@@ -265,3 +268,13 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 if useProd:
                     if os.path.exists(filename):
                         os.remove(filename)
+
+
+def get_patient_meta_data(token, base_url, patient_id):
+    url = f'{base_url}/{PATIENTS_API_PATH}/{patient_id}'
+    headers = {'Authorization': token}
+    result = requests.get(url, headers=headers)
+    if result and result.ok:
+        return result.json()
+    else:
+        return None

@@ -7,7 +7,7 @@ from bento.common.tokens import get_okta_token
 
 from bento.common.utils import get_logger
 from config import Config
-from meta_data import get_patient_meta_data
+from patient import get_patient_meta_data
 from bento.common.secrets import get_secret
 from treatmentarm import get_patients_for_arm
 from bento.common.s3 import S3Bucket
@@ -496,10 +496,10 @@ class MetaData:
         # Get the List of Patients for Each Arm
         for arm in self.config.arms:
             arm_id = arm.arm_id
-            patients = get_patients_for_arm(arm_id, token, self.config.match_arm_url)
+            patients = get_patients_for_arm(arm_id, token, self.config.match_base_url)
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():
-                data = get_patient_meta_data(token, self.config.match_base_url_patient, patient_id)
+                data = get_patient_meta_data(token, self.config.match_base_url, patient_id)
                 data[ARM_ID] = arm_id
                 data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data))

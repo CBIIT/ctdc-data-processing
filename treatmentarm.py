@@ -1,6 +1,7 @@
 import requests
 from patient import Patient
 
+ARM_API_PATH = 'treatment_arms'
 
 def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputList=[]):
     """
@@ -17,7 +18,7 @@ def getPatientsByTreatmentArm(arms=[], token='', matchArmUrl='', patientInputLis
         for patient_id in patients:
             patientInputList.append(Patient(patient_id, arm.arm_id, arm.phs_id, arm.bucket_name))
 
-def get_patients_for_arm(arm_id='', token='', matchArmUrl=''):
+def get_patients_for_arm(arm_id='', token='', match_base_url=''):
     """
     This function gets a dict for assignmentStatusOutcome info for all patients an arm
     Key is patient's patientSequenceNumber, value is assignmentStatusOutcome
@@ -26,7 +27,7 @@ def get_patients_for_arm(arm_id='', token='', matchArmUrl=''):
     """
     # Set the Headers
     headers = {'Authorization': token}
-    arm_url = matchArmUrl + arm_id
+    arm_url = f'{match_base_url}/{ARM_API_PATH}/{arm_id}'
     arm_result = requests.get(arm_url, headers=headers)
     arms = arm_result.json()
     patients = {}
