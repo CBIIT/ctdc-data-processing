@@ -166,6 +166,7 @@ class MetaData:
         obj['alternative'] = report.get('alternative')
         obj['transcript'] = report.get('transcript')
         obj['hgvs'] = report.get('hgvs', '')
+        obj['genomicHgvs'] = report.get('genomicHgvs', '')
         obj['oncominevariantclass'] = report.get('oncominevariantclass')
         obj['function'] = report.get('function')
         obj['protein'] = report.get('protein')
@@ -385,6 +386,7 @@ class MetaData:
             "snv_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
+            "genomicHgvs",
             "oncominevariantclass",
             "function",
             "protein"
@@ -405,6 +407,7 @@ class MetaData:
             "delins_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
+            "genomicHgvs",
             "oncominevariantclass",
             "function",
             "protein"
@@ -424,6 +427,7 @@ class MetaData:
             "indel_variant_of$alleleFrequency",
             "transcript",
             "hgvs",
+            "genomicHgvs",
             "oncominevariantclass",
             "function",
             "protein"
