@@ -15,8 +15,11 @@
 			"armId": "{{arm_id}}",
 			"phsId": "{{phs_id}}",
 			"bucketName": "{{bucket_name}}"
-		},
-	{%- endfor -%}
+		}
+		{%- if not loop.last -%}
+      	,
+    	{% endif %}
+	{% endfor %}
 	],
 
 	"metaDataBucket": "{{meta_data_bucket}}",
