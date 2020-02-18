@@ -5,12 +5,12 @@
 
 	"secretName": "{{secret_name}}",
 
-	"oktaAuthUrl": "https://bioappdev.okta.com/oauth2/{{okta_scret}}/v1/token",
+	"oktaAuthUrl": "https://bioappdev.okta.com/oauth2/{{okta_key}}/v1/token",
 
-	"matchBaseUrl": "{{match_url}}",
+	"matchBaseUrl": "{{match_base_url}}",
 
 	"arms": [
-	{% for arm,phs in match_Ids.items() %}		
+	{% for arm_id,phs_id in match_Ids.items() %}		
 		{
 			"armId": "{{arm_id}}",
 			"phsId": "{{phs_id}}",
