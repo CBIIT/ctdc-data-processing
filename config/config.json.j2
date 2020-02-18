@@ -1,0 +1,27 @@
+{
+	"region": "us-east-1",
+
+	"useProd": {{use_prod}},
+
+	"secretName": "{{secret_name}}",
+
+	"oktaAuthUrl": "https://bioappdev.okta.com/oauth2/{{okta_scret}}/v1/token",
+
+	"matchBaseUrl": "{{match_url}}",
+
+	"arms": [
+	{% for arm,phs in match_Ids.items() %}		
+		{
+			"armId": "{{arm_id}}",
+			"phsId": "{{phs_id}}",
+			"bucketName": "{{bucket_name}}"
+		},
+	{% endfor %}
+	],
+
+	"metaDataBucket": "{{meta_data_bucket}}",
+	"metaDataPath": "/CTDC/MATCH/{{meta_data_path}}",
+
+	"domain": "trialcommons.cancer.gov",
+	"cipher_key": 1
+}
