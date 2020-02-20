@@ -207,7 +207,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                             # If Error is found and we are in Prod Print and Exit
                             if r.status_code >= 400:
                                 log.error(f'Http Error Code {r.status_code} for file {filename}')
-                                sys.exit(1)
+                                continue
 
                             # This is Production. Write the file to local disk
                             with open(filename, 'wb') as file:
@@ -230,7 +230,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
 
                     if(md5sum != md5):
                         log.error(f"Uploading file to s3://{bucket}/{s3_key} FAILED")
-                        sys.exit(1)
+                        continue
 
                     log.info(f"Uploading file to s3://{bucket}/{s3_key} SUCCEEDED")
                     # Get S3 location of the bucket
