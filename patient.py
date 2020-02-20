@@ -214,7 +214,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 s3_key = msn+'/'+filename
 
                 # Upload File to S3
-                upload_result = s3_bucket.upload_file(s3_key, filenameToUpload)
+                upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
 
                 md5sum = upload_result['md5']
 
