@@ -209,11 +209,11 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                                 log.error(f'Http Error Code {r.status_code} for file {filename}')
                                 continue
 
+                            filenameToUpload = f'tmp/{filename}'
                             # This is Production. Write the file to local disk
-                            with open(filename, 'wb') as file:
+                            with open(filenameToUpload, 'wb') as file:
                                 shutil.copyfileobj(r.raw, file)
                                 # Setting the Pseudo variable's name to the actual filename
-                                filenameToUpload = filename
 
                     # Set S3 Key to Match the MATCH MSN/FileName
                     msn = fileData["molecularSequenceNumber"]
@@ -221,7 +221,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
 
                     log.info(f'Uploading file {filenameToUpload} to s3://{bucket}/{s3_key}')
                     # Upload File to S3
-                    upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
+                    upload_result = s3_bucket.upload_file(s3_key, filenameToUpload)
 
                     md5sum = upload_result['md5']
 
@@ -274,8 +274,8 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                     manifest_writer.writerow(fileInfo)
                     # For Production Data Delete the File after Processing
                     if useProd:
-                        if os.path.exists(filename):
-                            os.remove(filename)
+                        if os.path.exists(filenameToUpload):
+                            os.remove(filenameToUpload)
                 except Exception as e:
                     log.exception(e)
                 else:
