@@ -200,7 +200,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
 
                     log.info(f'Use sample file {filenameToUpload}')
                 else:
-                    log.info(f'Downloading file {filename} from {url}')
+                    log.info(f'Downloading file {filename}')
                     # Production: download real files and upload them
                     with requests.get(url, stream=True) as r:
                         # If Error is found and we are in Prod Print and Exit
@@ -218,7 +218,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 msn = fileData["molecularSequenceNumber"]
                 s3_key = msn+'/'+filename
 
-                log.info(f'Uploading file {filenameToUpload} to s3://{bucket}')
+                log.info(f'Uploading file {filenameToUpload} to s3://{bucket}/{s3_key}')
                 # Upload File to S3
                 upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
 
@@ -228,10 +228,10 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 md5 = get_md5(filenameToUpload)
 
                 if(md5sum != md5):
-                    log.error(f"Error Uploading file: {filename}")
+                    log.error(f"Uploading file to s3://{bucket}/{s3_key} FAILED")
                     sys.exit(1)
 
-                log.info(f'Uploaded file {filenameToUpload}')
+                log.info(f"Uploading file to s3://{bucket}/{s3_key} SUCCEEDED")
                 # Get S3 location of the bucket
                 s3_location = "s3://{}/{}".format(patient.bucket, s3_key)
                 # Get the filesize of the downloaded file from MATCHBOX
