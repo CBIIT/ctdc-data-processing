@@ -1,5 +1,6 @@
 import csv
 import os
+import shutil
 import sys
 
 import requests
@@ -177,17 +178,13 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
             for fileData in (patient.files):
                 # Get the File using the PreSigned URL
                 url = fileData['download_url']
-                r = requests.get(url, stream=True)
-
                 # Get the Filename from the PreSigned URL
                 filename = url.split("?")[0].split('/')[::-1][0]
-                # If Error is found and we are in Prod Print and Exit
-                if (r.status_code >= 400 and useProd):
-                    log.error(f'Http Error Code {r.status_code} for file {filename}')
-                    sys.exit(1)
 
-                # Creating a pseudo variable for Non Production Test Data for different File types
                 if not useProd:
+                    # Creating a pseudo variable for Non Production Test Data for different File types
+                    # UAT: don't download files (because there are no real files in the given bucket
+                    # Upload sample files for every case
                     if(fileData["type"] == 'DNABam'):
                         filenameToUpload = './samples/SampleFile.bam'
                     if(fileData["type"] == 'RNABam'):
@@ -199,12 +196,18 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                     if(fileData["type"] == 'RNABai'):
                         filenameToUpload = './samples/Sample2.bam.bai'
                 else:
-                    # This is Production. Write the file to local disk
-                    with open(filename, 'wb') as file:
-                        if(r.content is not None):
-                            file.write(r.content)
-                        # Setting the Pseudo variable's name to the actual filename
-                        filenameToUpload = filename
+                    # Production: download real files and upload them
+                    with requests.get(url, stream=True) as r:
+                        # If Error is found and we are in Prod Print and Exit
+                        if r.status_code >= 400:
+                            log.error(f'Http Error Code {r.status_code} for file {filename}')
+                            sys.exit(1)
+
+                        # This is Production. Write the file to local disk
+                        with open(filename, 'wb') as file:
+                            shutil.copyfileobj(r.raw, file)
+                            # Setting the Pseudo variable's name to the actual filename
+                            filenameToUpload = filename
 
                 # Set S3 Key to Match the MATCH MSN/FileName
                 msn = fileData["molecularSequenceNumber"]
