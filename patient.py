@@ -187,15 +187,20 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                     # Upload sample files for every case
                     if(fileData["type"] == 'DNABam'):
                         filenameToUpload = './samples/SampleFile.bam'
-                    if(fileData["type"] == 'RNABam'):
+                    elif(fileData["type"] == 'RNABam'):
                         filenameToUpload = './samples/Sample2.bam'
-                    if(fileData["type"] == 'VCF'):
+                    elif(fileData["type"] == 'VCF'):
                         filenameToUpload = './samples/Sample.vcf'
-                    if(fileData["type"] == 'DNABai'):
+                    elif(fileData["type"] == 'DNABai'):
                         filenameToUpload = './samples/SampleFile.bam.bai'
-                    if(fileData["type"] == 'RNABai'):
+                    elif(fileData["type"] == 'RNABai'):
                         filenameToUpload = './samples/Sample2.bam.bai'
+                    else:
+                        raise Exception(f'Wrong file type: "{fileData["type"]}"')
+
+                    log.info(f'Use sample file {filenameToUpload}')
                 else:
+                    log.info(f'Downloading file {filename} from {url}')
                     # Production: download real files and upload them
                     with requests.get(url, stream=True) as r:
                         # If Error is found and we are in Prod Print and Exit
@@ -213,6 +218,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 msn = fileData["molecularSequenceNumber"]
                 s3_key = msn+'/'+filename
 
+                log.info(f'Uploading file {filenameToUpload} to s3://{bucket}')
                 # Upload File to S3
                 upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
 
