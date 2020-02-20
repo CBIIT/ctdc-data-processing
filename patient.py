@@ -181,102 +181,105 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
                 # Get the Filename from the PreSigned URL
                 filename = url.split("?")[0].split('/')[::-1][0]
 
-                if not useProd:
-                    # Creating a pseudo variable for Non Production Test Data for different File types
-                    # UAT: don't download files (because there are no real files in the given bucket
-                    # Upload sample files for every case
-                    if(fileData["type"] == 'DNABam'):
-                        filenameToUpload = './samples/SampleFile.bam'
-                    elif(fileData["type"] == 'RNABam'):
-                        filenameToUpload = './samples/Sample2.bam'
-                    elif(fileData["type"] == 'VCF'):
-                        filenameToUpload = './samples/Sample.vcf'
-                    elif(fileData["type"] == 'DNABai'):
-                        filenameToUpload = './samples/SampleFile.bam.bai'
-                    elif(fileData["type"] == 'RNABai'):
-                        filenameToUpload = './samples/Sample2.bam.bai'
+                try:
+                    if not useProd:
+                        # Creating a pseudo variable for Non Production Test Data for different File types
+                        # UAT: don't download files (because there are no real files in the given bucket
+                        # Upload sample files for every case
+                        if(fileData["type"] == 'DNABam'):
+                            filenameToUpload = './samples/SampleFile.bam'
+                        elif(fileData["type"] == 'RNABam'):
+                            filenameToUpload = './samples/Sample2.bam'
+                        elif(fileData["type"] == 'VCF'):
+                            filenameToUpload = './samples/Sample.vcf'
+                        elif(fileData["type"] == 'DNABai'):
+                            filenameToUpload = './samples/SampleFile.bam.bai'
+                        elif(fileData["type"] == 'RNABai'):
+                            filenameToUpload = './samples/Sample2.bam.bai'
+                        else:
+                            raise Exception(f'Wrong file type: "{fileData["type"]}"')
+
+                        log.info(f'Use sample file {filenameToUpload}')
                     else:
-                        raise Exception(f'Wrong file type: "{fileData["type"]}"')
+                        log.info(f'Downloading file {filename}')
+                        # Production: download real files and upload them
+                        with requests.get(url, stream=True) as r:
+                            # If Error is found and we are in Prod Print and Exit
+                            if r.status_code >= 400:
+                                log.error(f'Http Error Code {r.status_code} for file {filename}')
+                                sys.exit(1)
 
-                    log.info(f'Use sample file {filenameToUpload}')
+                            # This is Production. Write the file to local disk
+                            with open(filename, 'wb') as file:
+                                shutil.copyfileobj(r.raw, file)
+                                # Setting the Pseudo variable's name to the actual filename
+                                filenameToUpload = filename
+
+                    # Set S3 Key to Match the MATCH MSN/FileName
+                    msn = fileData["molecularSequenceNumber"]
+                    s3_key = msn+'/'+filename
+
+                    log.info(f'Uploading file {filenameToUpload} to s3://{bucket}/{s3_key}')
+                    # Upload File to S3
+                    upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
+
+                    md5sum = upload_result['md5']
+
+                    # Calculate MD5 , Size and Bucket Location
+                    md5 = get_md5(filenameToUpload)
+
+                    if(md5sum != md5):
+                        log.error(f"Uploading file to s3://{bucket}/{s3_key} FAILED")
+                        sys.exit(1)
+
+                    log.info(f"Uploading file to s3://{bucket}/{s3_key} SUCCEEDED")
+                    # Get S3 location of the bucket
+                    s3_location = "s3://{}/{}".format(patient.bucket, s3_key)
+                    # Get the filesize of the downloaded file from MATCHBOX
+                    file_size = os.stat(filenameToUpload).st_size
+                    # Get the File format of the file downloaded
+                    file_format = (os.path.splitext(filenameToUpload)
+                                   [1]).split('.')[1].lower()
+                    # Calculating the SHA512
+                    #currentDirectory = os.getcwd()
+                    sha512 = get_sha512(os.path.abspath(filenameToUpload))
+                    # Extract the ACL from the acls provided
+                    acl = "[{}]".format(patient.acls)
+                    # Generate the UUID and GUID using the SHA calculated
+                    if useProd:
+                        uuid = get_uuid(domain, "file", sha512)
+                    else:
+                        uuid = get_uuid(domain, "file", s3_location + sha512)
+                    guid = '{}{}'.format(INDEXD_GUID_PREFIX, uuid)
+                    # Generate the dictionary to be writtent to the manifest file
+                    fileInfo = {
+                        PSN: cipher.simple_cipher(patient.patientId),
+                        GUID: guid,
+                        UUID: uuid,
+                        MD5: md5,
+                        MD5SUM: md5,
+                        TYPE: FILE_NODE,
+                        SIZE: file_size,
+                        ACL: acl,
+                        URL: s3_location,
+                        FILE_LOC: s3_location,
+                        FILE_NAME: filename,
+                        FILE_STATUS: "uploaded",
+                        FILE_FORMAT: file_format,
+                        FILE_TYPE: fileData["type"],
+                        MSN: msn
+
+                    }
+                    # Write the entry into the Manifest file
+                    manifest_writer.writerow(fileInfo)
+                    # For Production Data Delete the File after Processing
+                    if useProd:
+                        if os.path.exists(filename):
+                            os.remove(filename)
+                except Exception as e:
+                    log.exception(e)
                 else:
-                    log.info(f'Downloading file {filename}')
-                    # Production: download real files and upload them
-                    with requests.get(url, stream=True) as r:
-                        # If Error is found and we are in Prod Print and Exit
-                        if r.status_code >= 400:
-                            log.error(f'Http Error Code {r.status_code} for file {filename}')
-                            sys.exit(1)
-
-                        # This is Production. Write the file to local disk
-                        with open(filename, 'wb') as file:
-                            shutil.copyfileobj(r.raw, file)
-                            # Setting the Pseudo variable's name to the actual filename
-                            filenameToUpload = filename
-
-                # Set S3 Key to Match the MATCH MSN/FileName
-                msn = fileData["molecularSequenceNumber"]
-                s3_key = msn+'/'+filename
-
-                log.info(f'Uploading file {filenameToUpload} to s3://{bucket}/{s3_key}')
-                # Upload File to S3
-                upload_result = s3_bucket.upload_file(s3_key, filenameToUpload, multipart=True)
-
-                md5sum = upload_result['md5']
-
-                # Calculate MD5 , Size and Bucket Location
-                md5 = get_md5(filenameToUpload)
-
-                if(md5sum != md5):
-                    log.error(f"Uploading file to s3://{bucket}/{s3_key} FAILED")
-                    sys.exit(1)
-
-                log.info(f"Uploading file to s3://{bucket}/{s3_key} SUCCEEDED")
-                # Get S3 location of the bucket
-                s3_location = "s3://{}/{}".format(patient.bucket, s3_key)
-                # Get the filesize of the downloaded file from MATCHBOX
-                file_size = os.stat(filenameToUpload).st_size
-                # Get the File format of the file downloaded
-                file_format = (os.path.splitext(filenameToUpload)
-                               [1]).split('.')[1].lower()
-                # Calculating the SHA512
-                #currentDirectory = os.getcwd()
-                sha512 = get_sha512(os.path.abspath(filenameToUpload))
-                # Delete the file once it has been processed
-                log.info(f'Processed File with S3 Key {s3_key} ')
-                # Extract the ACL from the acls provided
-                acl = "[{}]".format(patient.acls)
-                # Generate the UUID and GUID using the SHA calculated
-                if useProd:
-                    uuid = get_uuid(domain, "file", sha512)
-                else:
-                    uuid = get_uuid(domain, "file", s3_location + sha512)
-                guid = '{}{}'.format(INDEXD_GUID_PREFIX, uuid)
-                # Generate the dictionary to be writtent to the manifest file
-                fileInfo = {
-                    PSN: cipher.simple_cipher(patient.patientId),
-                    GUID: guid,
-                    UUID: uuid,
-                    MD5: md5,
-                    MD5SUM: md5,
-                    TYPE: FILE_NODE,
-                    SIZE: file_size,
-                    ACL: acl,
-                    URL: s3_location,
-                    FILE_LOC: s3_location,
-                    FILE_NAME: filename,
-                    FILE_STATUS: "uploaded",
-                    FILE_FORMAT: file_format,
-                    FILE_TYPE: fileData["type"],
-                    MSN: msn
-
-                }
-                # Write the entry into the Manifest file
-                manifest_writer.writerow(fileInfo)
-                # For Production Data Delete the File after Processing
-                if useProd:
-                    if os.path.exists(filename):
-                        os.remove(filename)
+                    log.info(f'Process file {filename} Succeeded')
 
 
 def get_patient_meta_data(token, base_url, patient_id):
