@@ -48,9 +48,6 @@ try:
 
     log.info('PreSigned Urls Generated')
 
-    # Getting Bucket Name to upload files
-    bucketName = secrets["S3_DEST_BUCKET_NAME"]
-
     log.info('Uploading Files...')
 
     manifest_filename = 'tmp/Manifest' + \
