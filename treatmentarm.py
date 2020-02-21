@@ -1,25 +1,29 @@
 import requests
 from patient import Patient
+from bento.common.utils import get_logger
 
-ARM_API_PATH = 'treatment_arms'
-VERSION = 'version'
 
 class ArmAPI:
+    ARM_API_PATH = 'treatment_arms'
+    VERSION = 'version'
+
     def __init__(self, token, base_url):
         assert token
         assert base_url
+        self.log = get_logger('Arm API')
         self.token = token
         self.base_url = base_url
         self.headers = {'Authorization': self.token}
 
 
     def _get_arm_url(self, arm_id):
-        return f'{self.base_url}/{ARM_API_PATH}/{arm_id}'
+        return f'{self.base_url}/{self.ARM_API_PATH}/{arm_id}'
 
 
     def _retrieve_arm_info(self, arm_id):
         '''
         Retrieve arm information from Match API, return latest version of the arm
+
         :param arm_id:
         :return: dict contains information of latest version of the arm
         '''
@@ -30,8 +34,8 @@ class ArmAPI:
         arms = arm_result.json()
         arm_info = None
         for arm in arms:
-            current_version = arm.get(VERSION)
-            if not arm_info or current_version > arm_info[VERSION]:
+            current_version = arm.get(self.VERSION)
+            if not arm_info or current_version > arm_info[self.VERSION]:
                 arm_info = arm
 
         return arm_info
@@ -54,13 +58,38 @@ class ArmAPI:
             for patient_id in patients:
                 patient_list.append(Patient(patient_id, arm.arm_id, arm.phs_id, arm.bucket_name))
 
+    @staticmethod
+    def get_ctdc_arm_id(arm_id):
+        '''
+        Return CTDC simple version of arm_id, for EAY131-Z1D, return Z1D
+
+        :param arm_id:
+        :return:
+        '''
+
+        return arm_id.split('-')[-1]
+
     def get_arm_node(self, arm_id):
         """
         Retrieves information from API and returns a node for given arm_id
+
         :param arm_id:
         :return:
         """
         assert isinstance(arm_id, str)
+        arm_info = self._retrieve_arm_info(arm_id)
+        obj = {}
+        obj['arm_id'] = arm_id
+        # obj['arm_id'] = self.get_ctdc_arm_id(arm_id)
+        obj['arm_target'] = arm_info['gene']
+        drugs = arm_info['treatmentArmDrugs']
+        if len(drugs) == 1:
+            obj['arm_drug'] = drugs[0]['name']
+        else:
+            raise Exception(f'Arm {arm_id} has {len(drugs)} drugs!')
+        obj['pubmed_id'] = ''
+
+        return obj
 
 
     def get_patients_for_arm(self, arm_id):
