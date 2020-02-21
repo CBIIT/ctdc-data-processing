@@ -8,7 +8,7 @@ from bento.common.utils import get_logger
 
 from config import Config
 from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
-from treatmentarm import getPatientsByTreatmentArm
+from treatmentarm import ArmAPI
 
 
 # Specifying argument parsing from the command line
@@ -36,7 +36,8 @@ try:
 
     myPatientList = []
     # Get the List of Patients for Each Arm
-    getPatientsByTreatmentArm(config.arms, token, config.match_base_url, myPatientList)
+    arm_api = ArmAPI(token, config.match_base_url)
+    arm_api.getPatientsByTreatmentArm(config.arms, myPatientList)
     log.info('List of Patients by Arm received')
 
     # Get the List of S3 Paths for each patient in each Arm

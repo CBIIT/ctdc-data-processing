@@ -9,7 +9,7 @@ from bento.common.utils import get_logger
 from config import Config
 from patient import get_patient_meta_data
 from bento.common.secrets import get_secret
-from treatmentarm import get_patients_for_arm
+from treatmentarm import ArmAPI
 from bento.common.s3 import S3Bucket
 from bento.common.simple_cipher import SimpleCipher
 
@@ -498,9 +498,10 @@ class MetaData:
         token = get_okta_token(secrets, self.config.okta_auth_url)
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
+        arm_api = ArmAPI(token, config.match_base_url)
         for arm in self.config.arms:
             arm_id = arm.arm_id
-            patients = get_patients_for_arm(arm_id, token, self.config.match_base_url)
+            patients = arm_api.get_patients_for_arm(arm_id)
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():
                 data = get_patient_meta_data(token, self.config.match_base_url, patient_id)
