@@ -9,6 +9,18 @@ class ArmAPI:
         assert base_url
         self.token = token
         self.base_url = base_url
+        self.headers = {'Authorization': self.token}
+
+
+    def _get_arm_url(self, arm_id):
+        return f'{self.base_url}/{ARM_API_PATH}/{arm_id}'
+
+
+    def _retrieve_arm_info(self, arm_id):
+        arm_url = self._get_arm_url(arm_id)
+        arm_result = requests.get(arm_url, headers=self.headers)
+        return arm_result.json()
+
 
     def getPatientsByTreatmentArm(self, arms, patient_list):
         """
@@ -27,6 +39,15 @@ class ArmAPI:
             for patient_id in patients:
                 patient_list.append(Patient(patient_id, arm.arm_id, arm.phs_id, arm.bucket_name))
 
+    def get_arm_node(self, arm_id):
+        """
+        Retrieves information from API and returns a node for given arm_id
+        :param arm_id:
+        :return:
+        """
+        assert isinstance(arm_id, str)
+
+
     def get_patients_for_arm(self, arm_id):
         """
         This function gets a dict for assignmentStatusOutcome info for all patients an arm
@@ -35,13 +56,9 @@ class ArmAPI:
         Environment
         """
         assert isinstance(arm_id, str)
-        # Set the Headers
-        headers = {'Authorization': self.token}
-        arm_url = f'{self.base_url}/{ARM_API_PATH}/{arm_id}'
-        arm_result = requests.get(arm_url, headers=headers)
-        arms = arm_result.json()
         patients = {}
         arm_version = ''
+        arms = self._retrieve_arm_info(arm_id)
         for arm in arms:
             current_version = arm.get('version')
             if arm_version == '' or current_version > arm_version:
