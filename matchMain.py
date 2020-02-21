@@ -43,18 +43,13 @@ try:
     getPatientsFileData(token, config.match_base_url, myPatientList)
     log.info('Getting S3 Paths for all Patients in each Arm')
 
-    log.info('List of File Paths received')
-    getPatientsPreSignedURL(token, config.match_base_url, myPatientList)
-
-    log.info('PreSigned Urls Generated')
-
     log.info('Uploading Files...')
 
     manifest_filename = 'tmp/Manifest' + \
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
     log.info('Uploading patient files...')
-    uploadPatientFiles(manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
+    uploadPatientFiles(token, config.match_base_url, manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
     log.info('Uploading Files Completed!')
 
 

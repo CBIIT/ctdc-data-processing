@@ -29,6 +29,7 @@ CASE_ID = "case_id"
 FILE_STATUS = "file_status"
 MSN = "sequencing_assay.molecularSequenceNumber"
 PSN = 'patientSequenceNumber'
+S3URL = 's3url'
 
 INDEXD_GUID_PREFIX = 'dg.4DFC/'
 MANIFEST_FIELDS = [PSN, GUID, UUID, MD5, MD5SUM, TYPE, SIZE,
@@ -50,24 +51,30 @@ class Patient(object):
         self.bucket = bucket
 
 
+def get_signed_url(token, match_base_url, patien_id, s3_url):
+    url = f'{match_base_url}/{PATIENTS_API_PATH}/{patien_id}{DOWNLOAD_API_PATH}'
+    query = ({"s3_url": s3_url})
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json'
+    }
+    r = requests.post(url, json=query, headers=headers)
+    if r.status_code >= 400:
+        raise Exception(f'Can NOT retrieve signed URL for {patien_id}: {s3_url}')
+    # Add a dictionary item for the file object
+    return r.json()['download_url']
+
+
 def getPatientsPreSignedURL(token, match_base_url, my_patient_list):
     """
     This function retrieves the Presigned URL for each file for each
     patient in the list of patient objects provided in myPatientList
     """
     for patient in my_patient_list:
-        # Create the MATCH Api URL
-        url = f'{match_base_url}/{PATIENTS_API_PATH}/{patient.patientId}{DOWNLOAD_API_PATH}'
         # For each file in the patient object
         for file in patient.files:
-            s3Url = ({"s3_url": file["s3url"]})
-            headers = {
-                'Authorization': token,
-                'Content-Type': 'application/json'
-            }
-            r = requests.post(url, json=s3Url, headers=headers)
             # Add a dictionary item for the file object
-            file['download_url'] = r.json()['download_url']
+            file['download_url'] = get_signed_url(token, match_base_url, patient.patientId, file[S3URL])
 
 
 def getPatientsFileData(token, match_base_url, my_patient_list):
@@ -110,39 +117,39 @@ def getPatientS3Paths(data, patientFromList=None):
                 if('dnaBamFilePath' in nextGenerationSequence['ionReporterResults']):
                     fileInfo["type"] = 'DNABam'
                     fileInfo["molecularSequenceNumber"] = nextGenerationSequence['ionReporterResults']["molecularSequenceNumber"]
-                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['dnaBamFilePath']
+                    fileInfo[S3URL] = nextGenerationSequence['ionReporterResults']['dnaBamFilePath']
                     patientFromList.files.append(fileInfo)
 
                 fileInfo = {}
                 if('rnaBamFilePath' in nextGenerationSequence['ionReporterResults']):
                     fileInfo["type"] = 'RNABam'
                     fileInfo["molecularSequenceNumber"] = nextGenerationSequence['ionReporterResults']["molecularSequenceNumber"]
-                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['rnaBamFilePath']
+                    fileInfo[S3URL] = nextGenerationSequence['ionReporterResults']['rnaBamFilePath']
                     patientFromList.files.append(fileInfo)
 
                 fileInfo = {}
                 if('vcfFilePath' in nextGenerationSequence['ionReporterResults']):
                     fileInfo["type"] = 'VCF'
                     fileInfo["molecularSequenceNumber"] = nextGenerationSequence['ionReporterResults']["molecularSequenceNumber"]
-                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['vcfFilePath']
+                    fileInfo[S3URL] = nextGenerationSequence['ionReporterResults']['vcfFilePath']
                     patientFromList.files.append(fileInfo)
 
                 fileInfo = {}
                 if('dnaBaiFilePath' in nextGenerationSequence['ionReporterResults']):
                     fileInfo["type"] = 'DNABai'
                     fileInfo["molecularSequenceNumber"] = nextGenerationSequence['ionReporterResults']["molecularSequenceNumber"]
-                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['dnaBaiFilePath']
+                    fileInfo[S3URL] = nextGenerationSequence['ionReporterResults']['dnaBaiFilePath']
                     patientFromList.files.append(fileInfo)
 
                 fileInfo = {}
                 if('rnaBaiFilePath' in nextGenerationSequence['ionReporterResults']):
                     fileInfo["type"] = 'RNABai'
                     fileInfo["molecularSequenceNumber"] = nextGenerationSequence['ionReporterResults']["molecularSequenceNumber"]
-                    fileInfo["s3url"] = nextGenerationSequence['ionReporterResults']['rnaBaiFilePath']
+                    fileInfo[S3URL] = nextGenerationSequence['ionReporterResults']['rnaBaiFilePath']
                     patientFromList.files.append(fileInfo)
 
 
-def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log):
+def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domain, useProd, cipher, log):
     """
     This function uploads a set of files file pointed to from the Presigned 
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
@@ -167,7 +174,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
 
         # Process each Patient in the list
         for index, patient in enumerate(myPatientList):
-            log.info(f'Uploading Data for Patient {index} of {totalPatients}')
+            log.info(f'Uploading Data for Patient {index + 1} of {totalPatients}')
 
             # Get the name of the bucket
             bucket = patient.bucket
@@ -177,7 +184,7 @@ def uploadPatientFiles(manifestpath, myPatientList, domain, useProd, cipher, log
 
             for fileData in (patient.files):
                 # Get the File using the PreSigned URL
-                url = fileData['download_url']
+                url = get_signed_url(token, match_base_url, patient.patientId, fileData[S3URL])
                 # Get the Filename from the PreSigned URL
                 filename = url.split("?")[0].split('/')[::-1][0]
 
