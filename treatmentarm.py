@@ -2,6 +2,7 @@ import requests
 from patient import Patient
 
 ARM_API_PATH = 'treatment_arms'
+VERSION = 'version'
 
 class ArmAPI:
     def __init__(self, token, base_url):
@@ -17,9 +18,23 @@ class ArmAPI:
 
 
     def _retrieve_arm_info(self, arm_id):
+        '''
+        Retrieve arm information from Match API, return latest version of the arm
+        :param arm_id:
+        :return: dict contains information of latest version of the arm
+        '''
         arm_url = self._get_arm_url(arm_id)
         arm_result = requests.get(arm_url, headers=self.headers)
-        return arm_result.json()
+
+
+        arms = arm_result.json()
+        arm_info = None
+        for arm in arms:
+            current_version = arm.get(VERSION)
+            if not arm_info or current_version > arm_info[VERSION]:
+                arm_info = arm
+
+        return arm_info
 
 
     def getPatientsByTreatmentArm(self, arms, patient_list):
@@ -57,15 +72,11 @@ class ArmAPI:
         """
         assert isinstance(arm_id, str)
         patients = {}
-        arm_version = ''
-        arms = self._retrieve_arm_info(arm_id)
-        for arm in arms:
-            current_version = arm.get('version')
-            if arm_version == '' or current_version > arm_version:
-                for patient in arm.get('summaryReport', {}).get('assignmentRecords', []):
-                    slot = int(patient.get('slot', -1))
-                    if slot > 0:
-                        patients[patient.get('patientSequenceNumber')] = patient.get('assignmentStatusOutcome')
+        arm = self._retrieve_arm_info(arm_id)
+        for patient in arm.get('summaryReport', {}).get('assignmentRecords', []):
+            slot = int(patient.get('slot', -1))
+            if slot > 0:
+                patients[patient.get('patientSequenceNumber')] = patient.get('assignmentStatusOutcome')
 
         return patients
 
