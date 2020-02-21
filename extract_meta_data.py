@@ -489,6 +489,15 @@ class MetaData:
             "qc_result"
         ]
 
+        self.nodes['arm'] = []
+        self.fields['arm'] = [
+            # 'type',
+            'arm_id',
+            'arm_target',
+            'arm_drug',
+            'pubmed_id'
+        ]
+
     def extract(self):
         self.prepare()
         # Read Secrets from AWS Secrets Manager
@@ -502,6 +511,8 @@ class MetaData:
         for arm in self.config.arms:
             arm_id = arm.arm_id
             patients = arm_api.get_patients_for_arm(arm_id)
+            self.nodes['arm'].append(arm_api.get_arm_node(arm_id))
+
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():
                 data = get_patient_meta_data(token, self.config.match_base_url, patient_id)
