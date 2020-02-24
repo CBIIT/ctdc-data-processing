@@ -511,7 +511,7 @@ class MetaData:
         for arm in self.config.arms:
             arm_id = arm.arm_id
             patients = arm_api.get_patients_for_arm(arm_id)
-            self.nodes['arm'].append(arm_api.get_arm_node(arm_id))
+            self.nodes['arm'].append(arm_api.get_arm_node(arm))
 
             self.log.info('List of Patients by Arm received')
             for patient_id, outcome in patients.items():

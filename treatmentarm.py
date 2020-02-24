@@ -69,13 +69,14 @@ class ArmAPI:
 
         return arm_id.split('-')[-1]
 
-    def get_arm_node(self, arm_id):
+    def get_arm_node(self, arm):
         """
         Retrieves information from API and returns a node for given arm_id
 
-        :param arm_id:
+        :param arm_id: arm object with type Arm
         :return:
         """
+        arm_id = arm.arm_id
         assert isinstance(arm_id, str)
         arm_info = self._retrieve_arm_info(arm_id)
         obj = {}
@@ -87,7 +88,7 @@ class ArmAPI:
             obj['arm_drug'] = drugs[0]['name']
         else:
             raise Exception(f'Arm {arm_id} has {len(drugs)} drugs!')
-        obj['pubmed_id'] = ''
+        obj['pubmed_id'] = arm.pubmed_id
 
         return obj
 
