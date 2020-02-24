@@ -10,11 +10,11 @@
 	"matchBaseUrl": "{{match_base_url}}",
 
 	"arms": [
-	{%- for arm_id,phs_id in match_Ids.items() -%}		
+	{%- for item in range(arm|length) -%}		
 		{
-			"armId": "{{arm_id}}",
-			"phsId": "{{phs_id}}",
-			"bucketName": "{{bucket_name}}"
+			"armId": "{{arm_id[item]}}",
+			"phsId": "{{phs_id[item]}}",
+			"bucketName": "{{bucket_name[item]}}"
 		}
 		{%- if not loop.last -%}
       	,
