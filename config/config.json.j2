@@ -10,21 +10,15 @@
 	"matchBaseUrl": "{{match_base_url}}",
 
 	"arms": [
-	{%set arm = arm_id %}
-	{%set phs = phs_id %}
-	{%set bucket = bucket_name %}
+	{% set arm = arm_id %}
+	{% set phs = phs_id %}
+	{% set bucket = bucket_name %}
 	{%- for item in range(arm|length) -%}		
 		{
 			"armId": "{{arm[item]}}",
 			"phsId": "{{phs[item]}}",
 			"bucketName": "{{bucket[item]}}"
-	{%- for item in range(arm_id|length) -%}		
-		{
-			"armId": "{{arm_id[item]}}",
-			"phsId": "{{phs_id[item]}}",
-            "pubmedId": 1234,
-			"bucketName": "{{bucket_name[item]}}"
-		}
+        }
 		{%- if not loop.last -%}
       	,
     	{% endif %}
