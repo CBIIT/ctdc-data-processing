@@ -10,7 +10,7 @@
 	"matchBaseUrl": "{{match_base_url}}",
 
 	"arms": [
-	{%- for item in range(arm|length) -%}		
+	{%- for item in range(arm_id|length) -%}		
 		{
 			"armId": "{{arm_id[item]}}",
 			"phsId": "{{phs_id[item]}}",
