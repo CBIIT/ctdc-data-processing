@@ -1,13 +1,18 @@
 import argparse
 from datetime import datetime
+import os
 
+from bento.common.utils import get_logger, get_log_file, LOG_ENVVAR
+if LOG_ENVVAR not in os.environ:
+    os.environ[LOG_ENVVAR] = 'Match_File_Loader'
+
+from bento.common.s3 import S3Bucket
 from bento.common.secrets import get_secret
 from bento.common.simple_cipher import SimpleCipher
 from bento.common.tokens import get_okta_token
-from bento.common.utils import get_logger
 
 from config import Config
-from patient import getPatientsFileData, getPatientsPreSignedURL, uploadPatientFiles
+from patient import getPatientsFileData, uploadPatientFiles
 from treatmentarm import ArmAPI
 
 
@@ -16,7 +21,18 @@ parser = argparse.ArgumentParser(description='Extract file information from NCI 
 parser.add_argument("config_file", help="Name of Configuration File to run the File Uploader")
 args = parser.parse_args()
 
-log = get_logger('MATCH File Extractor')
+LOGER_NAME = 'MATCH File Loader'
+log = get_logger(LOGER_NAME)
+log_file = get_log_file()
+
+
+def upload_meta_file(bucket_name, file_path):
+    base_name = os.path.basename(file_path)
+    s3 = S3Bucket(bucket_name)
+    key = f'Manifest/{base_name}'
+    return s3.upload_file(key, file_path)
+
+
 try:
     config = Config(args.config_file)
 
@@ -53,6 +69,11 @@ try:
     uploadPatientFiles(token, config.match_base_url, manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
     log.info('Uploading Files Completed!')
 
+    upload_meta_file(config.meta_data_bucket, manifest_filename)
+    log.info(f'Manifest file {manifest_filename} has been uploaded to s3://{config.meta_data_bucket}')
+
+    upload_meta_file(config.meta_data_bucket, log_file)
+    log.info(f'Log file {log_file} has been uploaded to s3://{config.meta_data_bucket}')
 
 except Exception as e:
     # Print the cause of the exception
