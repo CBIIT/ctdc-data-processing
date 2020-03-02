@@ -22,6 +22,7 @@ parser.add_argument("config_file", help="Name of Configuration File to run the F
 args = parser.parse_args()
 
 LOGER_NAME = 'MATCH File Loader'
+MANIFEST_FOLDER = 'Manifests'
 log = get_logger(LOGER_NAME)
 log_file = get_log_file()
 
@@ -29,7 +30,7 @@ log_file = get_log_file()
 def upload_meta_file(bucket_name, file_path):
     base_name = os.path.basename(file_path)
     s3 = S3Bucket(bucket_name)
-    key = f'Manifest/{base_name}'
+    key = f'{MANIFEST_FOLDER}/{base_name}'
     return s3.upload_file(key, file_path)
 
 
