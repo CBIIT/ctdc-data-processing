@@ -5,7 +5,7 @@ import re
 
 from bento.common.tokens import get_okta_token
 
-from bento.common.utils import get_logger
+from bento.common.utils import get_logger, get_log_file
 from config import Config
 from patient import get_patient_meta_data
 from bento.common.secrets import get_secret
@@ -536,6 +536,7 @@ class MetaData:
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
 
         file_list = self.write_files()
+        file_list.append(get_log_file())
         self.upload_files(file_list)
 
 
