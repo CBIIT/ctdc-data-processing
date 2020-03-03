@@ -2,9 +2,9 @@ import argparse
 from datetime import datetime
 import os
 
-from bento.common.utils import get_logger, get_log_file, LOG_ENVVAR
-if LOG_ENVVAR not in os.environ:
-    os.environ[LOG_ENVVAR] = 'Match_File_Loader'
+from bento.common.utils import get_logger, get_log_file, LOG_PREFIX, APP_NAME
+if LOG_PREFIX not in os.environ:
+    os.environ[LOG_PREFIX] = 'Match_File_Loader'
 
 from bento.common.s3 import S3Bucket
 from bento.common.secrets import get_secret
@@ -23,6 +23,7 @@ args = parser.parse_args()
 
 LOGER_NAME = 'MATCH File Loader'
 MANIFEST_FOLDER = 'Manifests'
+os.environ[APP_NAME] = 'MATCH_File_Loader'
 log = get_logger(LOGER_NAME)
 log_file = get_log_file()
 

@@ -5,13 +5,19 @@ import re
 
 from bento.common.tokens import get_okta_token
 
-from bento.common.utils import get_logger, get_log_file
+from bento.common.utils import get_logger, get_log_file, APP_NAME, LOG_PREFIX
+
+if LOG_PREFIX not in os.environ:
+    os.environ[LOG_PREFIX] = 'Match_metadata_extractor'
+
 from config import Config
 from patient import get_patient_meta_data
 from bento.common.secrets import get_secret
 from treatmentarm import ArmAPI
 from bento.common.s3 import S3Bucket
 from bento.common.simple_cipher import SimpleCipher
+
+os.environ[APP_NAME] = 'MATCH_Metadata_extractor'
 
 CONFIG_FILE_ENVVAR = 'DATA_PROC_CONFIG_FILE'
 JOIN = 'join'
