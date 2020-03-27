@@ -186,6 +186,9 @@ def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domai
                 # Get the File using the PreSigned URL
                 url = get_signed_url(token, match_base_url, patient.patientId, fileData[S3URL])
                 # Get the Filename from the PreSigned URL
+
+                # Todo: filename should be extracted from fileData, extracting from signed URL causes files with characters
+                #       not compatible with URL to get encoded and won't match orginal file name any more
                 filename = url.split("?")[0].split('/')[::-1][0]
 
                 try:
