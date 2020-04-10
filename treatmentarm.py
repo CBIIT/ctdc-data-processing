@@ -8,8 +8,10 @@ class ArmAPI:
     VERSION = 'version'
 
     def __init__(self, token, base_url):
-        assert token
-        assert base_url
+        if not token:
+            raise ValueError('Token is not valid!')
+        if not base_url:
+            raise ValueError('base_url is not valid!')
         self.log = get_logger('Arm API')
         self.token = token
         self.base_url = base_url
@@ -50,8 +52,10 @@ class ArmAPI:
         """
 
         # Retrieve the Patient List for each Arm
-        assert isinstance(arms, list)
-        assert isinstance(patient_list, list)
+        if not isinstance(arms, list):
+            raise TypeError('Arms is not a list!')
+        if not isinstance(patient_list, list):
+            raise TypeError('Patient_lis is not a list!')
         for arm in arms:
             patients = self.get_patients_for_arm(arm.arm_id)
 
@@ -77,7 +81,8 @@ class ArmAPI:
         :return:
         """
         arm_id = arm.arm_id
-        assert isinstance(arm_id, str)
+        if not isinstance(arm_id, str):
+            raise TypeError(f'arm_id "{arm_id}" is not a string!')
         arm_info = self._retrieve_arm_info(arm_id)
         obj = {}
         obj['arm_id'] = arm_id
@@ -100,7 +105,8 @@ class ArmAPI:
         The token is the Okta token required for access to the Match
         Environment
         """
-        assert isinstance(arm_id, str)
+        if not isinstance(arm_id, str):
+            raise TypeError(f'arm_id "{arm_id}" is not a string!')
         patients = {}
         arm = self._retrieve_arm_info(arm_id)
         for patient in arm.get('summaryReport', {}).get('assignmentRecords', []):
