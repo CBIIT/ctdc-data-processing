@@ -34,7 +34,8 @@ ARM_ID = 'arm_id'
 class MetaData:
     def __init__(self, config):
         self.log = get_logger('Meta Data')
-        assert isinstance(config, Config)
+        if not isinstance(config, Config):
+            raise TypeError(f'config is not the correct type!')
         self.config = config
         self.fields = {}
         self.bucket = S3Bucket(self.config.meta_data_bucket)
@@ -87,13 +88,13 @@ class MetaData:
         speicmens = []
         for biopsy in data.get('biopsies', []):
             for message in biopsy.get('mdAndersonMessages', []):
-                type = message.get('message')
+                msg_type = message.get('message')
                 status = message.get('status', '')
                 if status == 'REJECTED':
                     # Ignore rejected nucleic_acid or specimen
                     self.log.info('Ignore nucleic_acid/specimen with "REJECTED" status')
                     continue
-                if type == 'NUCLEIC_ACID_SENDOUT':
+                if msg_type == 'NUCLEIC_ACID_SENDOUT':
                     obj = {
                         'type': 'nucleic_acid',
                         'specimen.biopsySequenceNumber': message.get('biopsySequenceNumber')
@@ -102,7 +103,7 @@ class MetaData:
                     obj['dnaConcentration'] = message.get('dnaConcentration')
                     obj['dnaVolume'] = message.get('dnaVolume')
                     necleic_acids.append(obj)
-                elif type == 'SPECIMEN_RECEIVED':
+                elif msg_type == 'SPECIMEN_RECEIVED':
                     obj = {
                         'type': 'specimen',
                         'biopsySequenceNumber': message.get('biopsySequenceNumber')
@@ -133,7 +134,8 @@ class MetaData:
                 objs.append(obj)
         return objs
 
-    def extract_variant_report_n_sequencing_assay(self, data):
+    @staticmethod
+    def extract_variant_report_n_sequencing_assay(data):
         variant_reports = []
         sequencing_assays = []
         for biopsy in data['biopsies']:
@@ -162,7 +164,8 @@ class MetaData:
                     sequencing_assays.append(assay)
         return (variant_reports, sequencing_assays)
 
-    def fill_in_variant_obj(self, obj, report):
+    @staticmethod
+    def fill_in_variant_obj(obj, report):
         obj['identifier'] = report.get('identifier')
         obj['gene'] = report.get('gene')
         obj['chromosome'] = report.get('chromosome')
@@ -307,13 +310,14 @@ class MetaData:
         return  path
 
     def upload_files(self, file_list):
-        assert isinstance(file_list, list)
+        if not isinstance(file_list, list):
+            raise TypeError('file_list is not a list!')
         for file in file_list:
             key = self.get_s3_key(file)
             self.log.info('Uploading {} to s3://{}{}'.format(file, self.bucket.bucket_name, key))
             obj = self.bucket.upload_file(key, file)
             if not obj:
-                self.log.error('Upload {} FAILED'.format(file, self.bucket.bucket_name, key))
+                self.log.error('Upload {} FAILED'.format(file))
             else:
                 if obj.get('skipped'):
                     self.log.info('File skipped.')

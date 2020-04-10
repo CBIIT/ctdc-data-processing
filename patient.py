@@ -1,7 +1,6 @@
 import csv
 import os
 import shutil
-import sys
 
 import requests
 
@@ -82,8 +81,8 @@ def getPatientsFileData(token, match_base_url, my_patient_list):
     This function retrieves the relevant files for the list
     of patients specified by myPatientList using the Okta token.
     The projection parameter is used to retrieve only the fields
-    of interest. It updates the myPatientList Object with the 
-    filepaths for each file for each patient. 
+    of interest. It updates the myPatientList Object with the
+    filepaths for each file for each patient.
     """
 
     # Set the Headers
@@ -151,7 +150,7 @@ def getPatientS3Paths(data, patientFromList=None):
 
 def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domain, useProd, cipher, log):
     """
-    This function uploads a set of files file pointed to from the Presigned 
+    This function uploads a set of files file pointed to from the Pre-signed
     urls into a bucket with the specified key name.The manifestpath is where the file final manifest is stored.
     """
 
