@@ -548,6 +548,18 @@ class MetaData:
         file_list = self.write_files()
         file_list.append(get_log_file())
         self.upload_files(file_list)
+        self.log.info(f'case extracted: {len(self.nodes["case"])}')
+        self.log.info(f'assignment_report extracted: {len(self.nodes["assignment_report"])}')
+        self.log.info(f'specimen extracted: {len(self.nodes["specimen"])}')
+        self.log.info(f'nucleic_acid extracted: {len(self.nodes["nucleic_acid"])}')
+        self.log.info(f'sequencing_assay extracted: {len(self.nodes["sequencing_assay"])}')
+        self.log.info(f'variant_report extracted: {len(self.nodes["variant_report"])}')
+        self.log.info(f'ihc_assay_report extracted: {len(self.nodes["ihc_assay_report"])}')
+        self.log.info(f'snv_variant extracted: {len(self.nodes["snv_variant"])}')
+        self.log.info(f'delins_variant extracted: {len(self.nodes["delins_variant"])}')
+        self.log.info(f'indel_variant extracted: {len(self.nodes["indel_variant"])}')
+        self.log.info(f'copy_number_variant extracted: {len(self.nodes["copy_number_variant"])}')
+        self.log.info(f'gene_fusion_variant extracted: {len(self.nodes["gene_fusion_variant"])}')
 
 
 if __name__ == '__main__':

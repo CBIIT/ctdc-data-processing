@@ -68,8 +68,9 @@ try:
         str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.tsv'
 
     log.info('Uploading patient files...')
-    uploadPatientFiles(token, config.match_base_url, manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
+    files_uploaded = uploadPatientFiles(token, config.match_base_url, manifest_filename, myPatientList, config.domain, config.use_prod, cipher, log)
     log.info('Uploading Files Completed!')
+    log.info(f'{files_uploaded} files of {len(myPatientList)} cases uploaded.')
 
     upload_meta_file(config.meta_data_bucket, manifest_filename)
     log.info(f'Manifest file {manifest_filename} has been uploaded to s3://{config.meta_data_bucket}')

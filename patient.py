@@ -171,6 +171,8 @@ def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domai
             log.warning('Empty patient list!')
             return
 
+        files_uploaded = 0
+
         # Process each Patient in the list
         for index, patient in enumerate(myPatientList):
             log.info(f'Uploading Data for Patient {index + 1} of {totalPatients}')
@@ -189,6 +191,7 @@ def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domai
                 # Todo: filename should be extracted from fileData, extracting from signed URL causes files with characters
                 #       not compatible with URL to get encoded and won't match orginal file name any more
                 filename = url.split("?")[0].split('/')[::-1][0]
+
 
                 try:
                     if not useProd:
@@ -289,6 +292,8 @@ def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domai
                     log.exception(e)
                 else:
                     log.info(f'Process file {filename} Succeeded')
+                    files_uploaded += 1
+        return files_uploaded
 
 
 def get_patient_meta_data(token, base_url, patient_id):
