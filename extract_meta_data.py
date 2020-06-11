@@ -511,6 +511,7 @@ class MetaData:
         self.fields['assignment_report_file'] = [
             'type',
             'show_node',
+            'arm.arm_id',
             'file_description',
             'file_format',
             'file_name',
@@ -572,7 +573,7 @@ class MetaData:
         :return:
         """
         ar_reports = {}
-        file_list = []
+        file_list = {}
 
         # Gather ar_reports for each arm
         for ar in self.nodes['assignment_report']:
@@ -592,22 +593,23 @@ class MetaData:
 
                 for obj in reports:
                     writer.writerow(obj)
-                file_list.append(file_name)
+                file_list[arm] = file_name
         self.nodes['assignment_report_file'].extend(self.generate_ar_report_manifest(file_list))
-        return file_list
+        return list(file_list.values())
 
     def generate_ar_report_manifest(self, file_list):
         files = []
-        for file_path in file_list:
+        for arm, file_path in file_list.items():
             file_name = os.path.basename(file_path)
             file_obj = {
                 'type': 'file',
+                'arm.arm_id': arm,
                 'show_node': True,
                 'file_description': '',
                 'file_format': get_file_format(file_name),
                 'file_name': file_name,
                 'file_size': os.path.getsize(file_path),
-                'file_type': 'Assignment Report',
+                'file_type': 'Assignment report',
                 'md5sum': get_md5(file_path)
             }
             files.append(file_obj)
