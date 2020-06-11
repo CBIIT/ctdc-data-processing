@@ -5,7 +5,7 @@ import re
 
 from bento.common.tokens import get_okta_token
 
-from bento.common.utils import get_logger, get_log_file, APP_NAME, LOG_PREFIX
+from bento.common.utils import get_logger, get_log_file, APP_NAME, LOG_PREFIX, get_file_format, get_md5
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Match_metadata_extractor'
@@ -274,7 +274,7 @@ class MetaData:
                             continue
                         obj = {
                             'type': 'assignment_report',
-                            'arm.arm_id': arm_id
+                            'arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
                         obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
@@ -284,18 +284,17 @@ class MetaData:
 
                         arms = assignment.get('patientAssignmentLogic', [])
                         for arm in arms:
-                            if arm['treatmentArmId'] == obj['arm.arm_id']:
+                            if arm['treatmentArmId'] == obj['arm_id']:
                                 obj['patientAssignmentLogic'] = arm.get('reason')
 
                         # jobName seems not really belongs to assignment_report
                         biopsy_sn = assignment.get('biopsySequenceNumber')
-                        obj['specimen.biopsySequenceNumber'] = biopsy_sn
+                        obj['biopsySequenceNumber'] = biopsy_sn
                         for biopsy in data.get('biopsies', []):
                             if biopsy_sn == biopsy.get('biopsySequenceNumber'):
                                 for sequence in biopsy.get('nextGenerationSequences'):
                                     if sequence.get('status') == 'CONFIRMED':
                                         obj['jobName'] = sequence.get('ionReporterResults', {}).get('jobName')
-                                        obj['variant_report.jobName'] = obj['jobName']
                         objs.append(obj)
                     else:
                         self.log.error('Assignment with arm but no arm_id!')
@@ -336,6 +335,7 @@ class MetaData:
                 for obj in self.nodes[node]:
                     writer.writerow(obj)
                 file_list.append(file_name)
+
         return file_list
 
 
@@ -472,10 +472,9 @@ class MetaData:
         self.nodes['assignment_report'] = []
         self.fields['assignment_report'] = [
             'type',
-            'arm.arm_id',
+            'arm_id',
             "patientSequenceNumber",
-            "specimen.biopsySequenceNumber",
-            "variant_report.jobName",
+            "biopsySequenceNumber",
             "jobName",
             "stepNumber",
             "patientAssignmentLogic",
@@ -506,6 +505,18 @@ class MetaData:
             'arm_target',
             'arm_drug',
             'pubmed_id'
+        ]
+
+        self.nodes['assignment_report_file'] = []
+        self.fields['assignment_report_file'] = [
+            'type',
+            'show_node',
+            'file_description',
+            'file_format',
+            'file_name',
+            'file_size',
+            'file_type',
+            'md5sum'
         ]
 
     def extract(self):
@@ -545,21 +556,62 @@ class MetaData:
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
 
-        file_list = self.write_files()
+        file_list = self.process_assignment_reports()
+
+        file_list.extend(self.write_files())
         file_list.append(get_log_file())
         self.upload_files(file_list)
-        self.log.info(f'case extracted: {len(self.nodes["case"])}')
-        self.log.info(f'assignment_report extracted: {len(self.nodes["assignment_report"])}')
-        self.log.info(f'specimen extracted: {len(self.nodes["specimen"])}')
-        self.log.info(f'nucleic_acid extracted: {len(self.nodes["nucleic_acid"])}')
-        self.log.info(f'sequencing_assay extracted: {len(self.nodes["sequencing_assay"])}')
-        self.log.info(f'variant_report extracted: {len(self.nodes["variant_report"])}')
-        self.log.info(f'ihc_assay_report extracted: {len(self.nodes["ihc_assay_report"])}')
-        self.log.info(f'snv_variant extracted: {len(self.nodes["snv_variant"])}')
-        self.log.info(f'delins_variant extracted: {len(self.nodes["delins_variant"])}')
-        self.log.info(f'indel_variant extracted: {len(self.nodes["indel_variant"])}')
-        self.log.info(f'copy_number_variant extracted: {len(self.nodes["copy_number_variant"])}')
-        self.log.info(f'gene_fusion_variant extracted: {len(self.nodes["gene_fusion_variant"])}')
+        for node in self.nodes.keys():
+            self.log.info(f'{node} extracted: {len(self.nodes[node])}')
+
+    def process_assignment_reports(self):
+        """
+        Write assignment reports into data files, one file per arm.
+        Also populate meta data information for 'file' represents assignment_report files
+        Will delete 'assignment_report' from self.nodes
+        :return:
+        """
+        ar_reports = {}
+        file_list = []
+
+        # Gather ar_reports for each arm
+        for ar in self.nodes['assignment_report']:
+            arm = ar['arm_id']
+            if arm not in ar_reports:
+                ar_reports[arm] = []
+            ar_reports[arm].append(ar)
+        del self.nodes['assignment_report']
+
+        # Write ar_reports in files
+        for arm, reports in ar_reports.items():
+            file_name = f'tmp/{arm}_assignment_reports.csv'
+            self.log.info(f'Writing assignment_report for arm "{arm}" data into "{file_name}"')
+            with open(file_name, 'w') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=self.fields['assignment_report'])
+                writer.writeheader()
+
+                for obj in reports:
+                    writer.writerow(obj)
+                file_list.append(file_name)
+        self.nodes['assignment_report_file'].extend(self.generate_ar_report_manifest(file_list))
+        return file_list
+
+    def generate_ar_report_manifest(self, file_list):
+        files = []
+        for file_path in file_list:
+            file_name = os.path.basename(file_path)
+            file_obj = {
+                'type': 'file',
+                'show_node': True,
+                'file_description': '',
+                'file_format': get_file_format(file_name),
+                'file_name': file_name,
+                'file_size': os.path.getsize(file_path),
+                'file_type': 'Assignment Report',
+                'md5sum': get_md5(file_path)
+            }
+            files.append(file_obj)
+        return files
 
 
 if __name__ == '__main__':
