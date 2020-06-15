@@ -273,7 +273,6 @@ class MetaData:
                                              f"to another arm: {arm_id}, this assignment is ignored!")
                             continue
                         obj = {
-                            'type': 'assignment_report',
                             'arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
@@ -471,7 +470,6 @@ class MetaData:
 
         self.nodes['assignment_report'] = []
         self.fields['assignment_report'] = [
-            'type',
             'arm_id',
             "patientSequenceNumber",
             "biopsySequenceNumber",
