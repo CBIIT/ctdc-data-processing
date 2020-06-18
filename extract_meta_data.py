@@ -515,7 +515,8 @@ class MetaData:
             'file_name',
             'file_size',
             'file_type',
-            'md5sum'
+            'md5sum',
+            'acl'
         ]
 
     def extract(self):
@@ -528,8 +529,10 @@ class MetaData:
         self.log.info('Token Obtained')
         # Get the List of Patients for Each Arm
         arm_api = ArmAPI(token, config.match_base_url)
+        self.phs_ids = {}
         for arm in self.config.arms:
             arm_id = arm.arm_id
+            self.phs_ids[arm_id] = arm.phs_id
             patients = arm_api.get_patients_for_arm(arm_id)
             self.nodes['arm'].append(arm_api.get_arm_node(arm))
 
@@ -608,7 +611,8 @@ class MetaData:
                 'file_name': file_name,
                 'file_size': os.path.getsize(file_path),
                 'file_type': 'Assignment report',
-                'md5sum': get_md5(file_path)
+                'md5sum': get_md5(file_path),
+                'acl': [self.phs_ids[arm]]
             }
             files.append(file_obj)
         return files
