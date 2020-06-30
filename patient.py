@@ -256,7 +256,7 @@ def uploadPatientFiles(token, match_base_url, manifestpath, myPatientList, domai
                     #currentDirectory = os.getcwd()
                     sha512 = get_sha512(os.path.abspath(filenameToUpload))
                     # Extract the ACL from the acls provided
-                    acl = "[{}]".format(patient.acls)
+                    acl = "['{}']".format(patient.acls)
                     # Generate the UUID and GUID using the SHA calculated
                     if useProd:
                         uuid = get_uuid(domain, "file", sha512)
