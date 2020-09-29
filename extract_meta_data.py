@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 import re
+import requests
 
 from bento.common.tokens import get_okta_token
 
@@ -30,6 +31,8 @@ DRUG_NAME = 'name'
 DELIMITER = ', '
 HARD_CODED_FUNC = 'hard_coded'
 ARM_ID = 'arm_id'
+
+EXCLUSION_QUERY = 'active=true&projection=treatmentArmId,version,exclusionDiseases,exclusionDrugs'
 
 class MetaData:
     def __init__(self, config):
@@ -301,11 +304,29 @@ class MetaData:
                     self.log.warning('Assignment without treatmentArm!')
         return objs
 
+    def extract_exclusions(self, data):
+        disease_exclusions = []
+        for disease in data.get('exclusionDiseases', []):
+            disease_exclusions.append({
+                'id': disease.get('_id'),
+                'ctep_category': disease.get('ctepCategory'),
+                'ctep_sub_category': disease.get('ctepSubCategory'),
+                'short_name': disease.get('shortName')
+            })
+
+        drug_exclusions = []
+        for drug in data.get('exclusionDrugs', []):
+            drug_info = drug.get('drugs', [])
+            drug_exclusions.append({
+                'drug_id': drug_info[0].get('drugId'),
+                'name': drug_info[0].get('name')
+            })
+        return disease_exclusions, drug_exclusions
 
     def get_s3_key(self, file_path):
         file_name = os.path.basename(file_path)
-        path = os.path.join(self.config.meta_data_path, file_name)
-        return  path
+        path = "/".join((self.config.meta_data_path, file_name))
+        return path
 
     def upload_files(self, file_list):
         if not isinstance(file_list, list):
@@ -400,7 +421,6 @@ class MetaData:
             "function",
             "protein"
         ]
-
 
         self.nodes['delins_variant'] = []
         self.fields['delins_variant'] = [
@@ -519,6 +539,20 @@ class MetaData:
             'acl'
         ]
 
+        self.nodes['drug_exclusion_criteria'] = []
+        self.fields['drug_exclusion_criteria'] = [
+            'drug_id',
+            'name'
+        ]
+
+        self.nodes['disease_exclusion_criteria'] = []
+        self.fields['disease_exclusion_criteria'] = [
+            'id',
+            'ctep_category',
+            'ctep_sub_category',
+            'short_name'
+        ]
+
     def extract(self):
         self.prepare()
         # Read Secrets from AWS Secrets Manager
@@ -558,6 +592,12 @@ class MetaData:
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
 
+            data = self.get_exclusion_data(arm.arm_id, token)
+            if data:
+                (disease_exclusion, drug_exclusion) = self.extract_exclusions(data)
+                self.nodes['disease_exclusion_criteria'].extend(disease_exclusion)
+                self.nodes['drug_exclusion_criteria'].extend(drug_exclusion)
+
         file_list = self.process_assignment_reports()
 
         file_list.extend(self.write_files())
@@ -565,6 +605,19 @@ class MetaData:
         self.upload_files(file_list)
         for node in self.nodes.keys():
             self.log.info(f'{node} extracted: {len(self.nodes[node])}')
+
+    def get_exclusion_data(self, arm, token):
+        url = f'{self.config.match_base_url}/{self.config.arms_folder}/{arm}?{EXCLUSION_QUERY}'
+        headers = {'Authorization': token}
+        result = requests.get(url, headers=headers)
+        if result and result.ok:
+            return result.json()[0]
+        elif not result.ok:
+            self.log.error(f'Query failed: {url}')
+            return None
+        else:
+            self.log.warning(f'No results found from query: {url}')
+            return None
 
     def process_assignment_reports(self):
         """

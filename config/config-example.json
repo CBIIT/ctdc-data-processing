@@ -9,6 +9,8 @@
 
 	"matchBaseUrl": "https://api.match-uat.nci.nih.gov/api/v1",
 
+	"armsFolder": "treatment_arms",
+
 	"arms": [
 		{
 			"armId": "EAY131-Z1D",

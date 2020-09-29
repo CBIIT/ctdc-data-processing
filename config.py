@@ -37,6 +37,8 @@ class Config:
         self.okta_auth_url = self.data["oktaAuthUrl"]
         # Get the Match UAT Treatment Arm Api URL
         self.match_base_url = removeTrailingSlash(self.data['matchBaseUrl'])
+        # Get the folder path to the folder containing the arms
+        self.arms_folder = self.data['armsFolder']
 
         if self.use_prod == False:
             self.log.info('Using Match UAT Environment')
