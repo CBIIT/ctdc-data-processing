@@ -304,14 +304,17 @@ class MetaData:
                     self.log.warning('Assignment without treatmentArm!')
         return objs
 
-    def extract_exclusions(self, data):
+    def extract_exclusions(self, data, arm_id):
         disease_exclusions = []
         for disease in data.get('exclusionDiseases', []):
             disease_exclusions.append({
                 'id': disease.get('_id'),
                 'ctep_category': disease.get('ctepCategory'),
                 'ctep_sub_category': disease.get('ctepSubCategory'),
-                'short_name': disease.get('shortName')
+                'short_name': disease.get('shortName'),
+                'arm.arm_id': arm_id,
+                'criterion_type': 'Exclusion',
+                'type': 'disease_eligibility_criterion'
             })
 
         drug_exclusions = []
@@ -319,7 +322,10 @@ class MetaData:
             drug_info = drug.get('drugs', [])
             drug_exclusions.append({
                 'drug_id': drug_info[0].get('drugId'),
-                'name': drug_info[0].get('name')
+                'name': drug_info[0].get('name'),
+                'arm.arm_id': arm_id,
+                'criterion_type': 'Exclusion',
+                'type': 'drug_eligibility_criterion'
             })
         return disease_exclusions, drug_exclusions
 
@@ -542,7 +548,10 @@ class MetaData:
         self.nodes['drug_exclusion_criteria'] = []
         self.fields['drug_exclusion_criteria'] = [
             'drug_id',
-            'name'
+            'name',
+            'type',
+            'criterion_type',
+            'arm.arm_id'
         ]
 
         self.nodes['disease_exclusion_criteria'] = []
@@ -550,7 +559,10 @@ class MetaData:
             'id',
             'ctep_category',
             'ctep_sub_category',
-            'short_name'
+            'short_name',
+            'type',
+            'criterion_type',
+            'arm.arm_id'
         ]
 
     def extract(self):
@@ -594,7 +606,7 @@ class MetaData:
 
             data = self.get_exclusion_data(arm.arm_id, token)
             if data:
-                (disease_exclusion, drug_exclusion) = self.extract_exclusions(data)
+                (disease_exclusion, drug_exclusion) = self.extract_exclusions(data, arm_id)
                 self.nodes['disease_exclusion_criteria'].extend(disease_exclusion)
                 self.nodes['drug_exclusion_criteria'].extend(drug_exclusion)
 
