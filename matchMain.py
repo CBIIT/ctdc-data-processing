@@ -8,6 +8,7 @@ if LOG_PREFIX not in os.environ:
 
 from bento.common.s3 import S3Bucket
 from bento.common.secrets import get_secret
+from local_secret import get_local_secrets
 from bento.common.simple_cipher import SimpleCipher
 from bento.common.tokens import get_okta_token
 
@@ -46,7 +47,8 @@ try:
         log.info('Using Match UAT Environment')
 
     # Read Secrets from AWS Secrets Manager
-    secrets = get_secret(config.region, config.secret_name)
+    #secrets = get_secret(config.region, config.secret_name)
+    secrets = get_local_secrets()
     log.info('Secrets Read')
     # Retrieve the Okta Token
     token = get_okta_token(secrets, config.okta_auth_url)
