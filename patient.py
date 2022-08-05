@@ -304,3 +304,13 @@ def get_patient_meta_data(token, base_url, patient_id):
         return result.json()
     else:
         return None
+
+
+def get_patient_assignment_reports(token, base_url, patient_id):
+    url = f'{base_url}/{PATIENTS_API_PATH}/{patient_id}/bre_assignment_reports'
+    headers = {'Authorization': token}
+    result = requests.get(url, headers=headers)
+    if result and result.ok:
+        return result.json()
+    else:
+        return None
