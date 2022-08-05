@@ -2,3 +2,4 @@ requests
 boto3
 pyyaml
 jsonpickle
+bs4
