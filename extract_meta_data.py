@@ -11,8 +11,9 @@ if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Match_metadata_extractor'
 
 from config import Config
-from patient import get_patient_meta_data
+from patient import get_patient_meta_data, get_patient_assignment_reports
 from bento.common.secrets import get_secret
+from local_secret import get_local_secrets
 from treatmentarm import ArmAPI
 from bento.common.s3 import S3Bucket
 from bento.common.simple_cipher import SimpleCipher
@@ -66,6 +67,7 @@ class MetaData:
             'arm.arm_id': data[ARM_ID]
         }
         obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
+        obj['PSN'] = data.get('patientSequenceNumber')
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
         obj['ethnicity'] = data.get('ethnicity')
@@ -264,7 +266,10 @@ class MetaData:
         objs = []
         for assignment in data.get('patientAssignments', []):
             if assignment.get('patientAssignmentStatus') != 'NO_ARM_ASSIGNED':
-                treatment_arm = assignment.get('treatmentArm')
+                treatment_arms = assignment.get('treatmentArms')
+                if len(treatment_arms) > 1:
+                    self.log.warning(f'Assignment report has {len(treatment_arms)} ARMS!')
+                treatment_arm = treatment_arms[0] if len(treatment_arms) > 0 else None
                 if treatment_arm:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
@@ -345,6 +350,7 @@ class MetaData:
             'type',
             'arm.arm_id',
             'patientSequenceNumber',
+            'PSN',
             'gender',
             'races',
             'ethnicity',
@@ -522,8 +528,10 @@ class MetaData:
     def extract(self):
         self.prepare()
         # Read Secrets from AWS Secrets Manager
-        secrets = get_secret(self.config.region, self.config.secret_name)
+        #secrets = get_secret(self.config.region, self.config.secret_name)
+        secrets = get_local_secrets()
         self.log.info('Secrets Read')
+
         # Retrieve the Okta Token
         token = get_okta_token(secrets, self.config.okta_auth_url)
         self.log.info('Token Obtained')
@@ -540,6 +548,8 @@ class MetaData:
             for patient_id, outcome in patients.items():
                 data = get_patient_meta_data(token, self.config.match_base_url, patient_id)
                 data[ARM_ID] = arm_id
+                assignment_reports = get_patient_assignment_reports(token, self.config.match_base_url, patient_id)
+                data['patientAssignments'] = assignment_reports
                 data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data))
                 nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
