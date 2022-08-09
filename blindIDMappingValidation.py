@@ -43,10 +43,10 @@ for value in psn_df['PSN'].tolist():
     line_num += 1
     occurrence = patient_id_df['Case ID'].tolist().count(value)
     if occurrence == 0:
-        log.error('Line {}: The PSN value {} does not have an entrance in the mapping file'.format(line_num, value))
+        log.error('Line {}: The PSN value {} does not have an entry in the mapping file'.format(line_num, value))
         validation_success = False
     elif occurrence > 1:
-        log.error('Line {}: The PSN value {} has more than one entrance in the mapping file'.format(line_num, value))
+        log.error('Line {}: The PSN value {} has more than one entry in the mapping file'.format(line_num, value))
         validation_success = False
 
 
