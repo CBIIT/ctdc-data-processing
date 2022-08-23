@@ -23,7 +23,14 @@ class Config:
         # Read arm objects
         self.arms = []
         for obj in self.data['arms']:
-            self.arms.append(Arm(obj))
+            arm_obj = {
+                'phsId': obj['phsId'],
+                'pubmedId': obj['pubmedId'],
+                'bucketName': obj['bucketName']
+            }
+            for armId in obj['matchArms']:
+                arm_obj['armId'] = armId
+                self.arms.append(Arm(arm_obj))
 
         # Get List of Arms
         self.meta_data_path = self.data['metaDataPath']
