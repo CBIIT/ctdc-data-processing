@@ -2,10 +2,12 @@ import argparse
 import csv
 import os
 import re
+import pandas as pd
 
 from bento.common.tokens import get_okta_token
 
 from bento.common.utils import get_logger, get_log_file, APP_NAME, LOG_PREFIX, get_file_format, get_md5
+from convert_to_xlsx import convert_to_xlsx
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Match_metadata_extractor'
@@ -17,6 +19,7 @@ from local_secret import get_local_secrets
 from treatmentarm import ArmAPI
 from bento.common.s3 import S3Bucket
 from bento.common.simple_cipher import SimpleCipher
+
 
 os.environ[APP_NAME] = 'MATCH_Metadata_extractor'
 
@@ -31,6 +34,7 @@ DRUG_NAME = 'name'
 DELIMITER = ', '
 HARD_CODED_FUNC = 'hard_coded'
 ARM_ID = 'arm_id'
+
 
 class MetaData:
     def __init__(self, config):
@@ -61,13 +65,25 @@ class MetaData:
         return delimiter.join([obj[field] for obj in objects])
 
 
-    def extract_case(self, data):
+    def extract_case(self, data, patient_id_df):
         obj = {
             'type': 'case',
             'arm.arm_id': data[ARM_ID]
         }
-        obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
-        obj['PSN'] = data.get('patientSequenceNumber')
+        #obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
+        #print(data.get('patientSequenceNumber'))
+        PSN = data.get('patientSequenceNumber')
+        # validate PSN
+        occurrence = patient_id_df['Case ID'].tolist().count(int(PSN))
+        if occurrence == 0:
+            raise Exception('The PSN value {} does not have an entry in the mapping file, abort extraction'.format(PSN))
+        elif occurrence > 1:
+            raise Exception('The PSN value {} has more than one entry in the mapping file, abort extraction'.format(PSN))
+        if occurrence == 1:
+            obj['PSN'] = patient_id_df.loc[patient_id_df['Case ID'] == int(PSN), 'De-identification ID'].iloc[0]
+            obj['patientSequenceNumber'] = self.cipher.simple_cipher(str(patient_id_df.loc[patient_id_df['Case ID'] == int(PSN), 'De-identification ID'].iloc[0]))
+
+
         obj['gender'] = data.get('gender')
         obj['races'] = DELIMITER.join(data['races'])
         obj['ethnicity'] = data.get('ethnicity')
@@ -85,7 +101,7 @@ class MetaData:
         obj['priorDrugs'] = self.get_prior_drugs(data.get('priorDrugs', []))
         return [obj]
 
-    def extract_specimen_n_nucleic_acid(self, data):
+    def extract_specimen_n_nucleic_acid(self, data, patient_id_df):
         necleic_acids = []
         speicmens = []
         for biopsy in data.get('biopsies', []):
@@ -110,7 +126,9 @@ class MetaData:
                         'type': 'specimen',
                         'biopsySequenceNumber': message.get('biopsySequenceNumber')
                     }
-                    obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(message.get('patientSequenceNumber'))
+                    #obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(message.get('patientSequenceNumber'))
+                    obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(str(patient_id_df.loc[patient_id_df['Case ID'] == int(message.get('patientSequenceNumber')), 'De-identification ID'].iloc[0]))
+
                     speicmens.append(obj)
                 else:
                     self.log.debug('mdAndersonMessages is not a nucleic_acid or specimen')
@@ -262,7 +280,7 @@ class MetaData:
                     self.log.info('Sequence skipped, status: {}'.format(status))
         return (snv_variants, delins_variants, indel_variants, copy_number_variants, gene_fusion_variants)
 
-    def extract_assignment_report(self, data):
+    def extract_assignment_report(self, data, patient_id_df):
         objs = []
         for assignment in data.get('patientAssignments', []):
             if assignment.get('patientAssignmentStatus') != 'NO_ARM_ASSIGNED':
@@ -273,15 +291,16 @@ class MetaData:
                 if treatment_arm:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
+                        patientSequenceNumber = patient_id_df.loc[patient_id_df['Case ID'] == int(data.get('patientSequenceNumber')), 'De-identification ID'].iloc[0]
                         if arm_id != data['arm_id']:
-                            self.log.warning(f"Patient {data.get('patientSequenceNumber')} was assigned " +
+                            self.log.warning(f"Patient {patientSequenceNumber} was assigned " +
                                              f"to another arm: {arm_id}, this assignment is ignored!")
                             continue
                         obj = {
                             'arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
-                        obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
+                        obj['patientSequenceNumber'] = self.cipher.simple_cipher(str(patientSequenceNumber))
                         obj['stepNumber'] = assignment.get('stepNumber')
                         for assignment_message in assignment.get('patientAssignmentMessages', []):
                             obj['stepNumber'] = assignment_message.get('stepNumber', obj['stepNumber'])
@@ -349,8 +368,8 @@ class MetaData:
         self.fields['case'] = [
             'type',
             'arm.arm_id',
-            'patientSequenceNumber',
             'PSN',
+            'patientSequenceNumber',
             'gender',
             'races',
             'ethnicity',
@@ -538,6 +557,10 @@ class MetaData:
         # Get the List of Patients for Each Arm
         arm_api = ArmAPI(token, config.match_base_url)
         self.phs_ids = {}
+        # Convert the id Mapping file
+        self.log.info('Converting the blind ID file to xlsx')
+        new_blindID_file_name = convert_to_xlsx(self.config.blindID_mapping_file)
+        patient_id_df = pd.read_excel(new_blindID_file_name)
         for arm in self.config.arms:
             arm_id = arm.arm_id
             self.phs_ids[arm_id] = arm.phs_id
@@ -551,8 +574,8 @@ class MetaData:
                 assignment_reports = get_patient_assignment_reports(token, self.config.match_base_url, patient_id)
                 data['patientAssignments'] = assignment_reports
                 data['assignmentStatusOutcome'] = outcome
-                self.nodes['case'].extend(self.extract_case(data))
-                nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
+                self.nodes['case'].extend(self.extract_case(data, patient_id_df))
+                nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data, patient_id_df)
                 self.nodes['specimen'].extend(speicimens)
                 self.nodes['nucleic_acid'].extend(nucleic_acid_reports)
                 self.nodes['ihc_assay_report'].extend(self.extract_ihc_assay_report(data))
@@ -566,7 +589,7 @@ class MetaData:
                 self.nodes['indel_variant'].extend(indel_variants)
                 self.nodes['copy_number_variant'].extend(copy_number_variants)
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
-                self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
+                self.nodes['assignment_report'].extend(self.extract_assignment_report(data, patient_id_df))
 
         file_list = self.process_assignment_reports()
 
