@@ -101,7 +101,7 @@ class MetaData:
         obj['priorDrugs'] = self.get_prior_drugs(data.get('priorDrugs', []))
         return [obj]
 
-    def extract_specimen_n_nucleic_acid(self, data):
+    def extract_specimen_n_nucleic_acid(self, data, patient_id_df):
         necleic_acids = []
         speicmens = []
         for biopsy in data.get('biopsies', []):
@@ -126,7 +126,9 @@ class MetaData:
                         'type': 'specimen',
                         'biopsySequenceNumber': message.get('biopsySequenceNumber')
                     }
-                    obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(message.get('patientSequenceNumber'))
+                    #obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(message.get('patientSequenceNumber'))
+                    obj['case.patientSequenceNumber'] = self.cipher.simple_cipher(str(patient_id_df.loc[patient_id_df['Case ID'] == int(message.get('patientSequenceNumber')), 'De-identification ID'].iloc[0]))
+
                     speicmens.append(obj)
                 else:
                     self.log.debug('mdAndersonMessages is not a nucleic_acid or specimen')
@@ -278,7 +280,7 @@ class MetaData:
                     self.log.info('Sequence skipped, status: {}'.format(status))
         return (snv_variants, delins_variants, indel_variants, copy_number_variants, gene_fusion_variants)
 
-    def extract_assignment_report(self, data):
+    def extract_assignment_report(self, data, patient_id_df):
         objs = []
         for assignment in data.get('patientAssignments', []):
             if assignment.get('patientAssignmentStatus') != 'NO_ARM_ASSIGNED':
@@ -289,15 +291,16 @@ class MetaData:
                 if treatment_arm:
                     arm_id = treatment_arm.get('treatmentArmId')
                     if arm_id:
+                        patientSequenceNumber = patient_id_df.loc[patient_id_df['Case ID'] == int(data.get('patientSequenceNumber')), 'De-identification ID'].iloc[0]
                         if arm_id != data['arm_id']:
-                            self.log.warning(f"Patient {data.get('patientSequenceNumber')} was assigned " +
+                            self.log.warning(f"Patient {patientSequenceNumber} was assigned " +
                                              f"to another arm: {arm_id}, this assignment is ignored!")
                             continue
                         obj = {
                             'arm_id': arm_id
                         }
                         obj['assignmentStatusOutcome'] = data.get('assignmentStatusOutcome')
-                        obj['patientSequenceNumber'] = self.cipher.simple_cipher(data.get('patientSequenceNumber'))
+                        obj['patientSequenceNumber'] = self.cipher.simple_cipher(str(patientSequenceNumber))
                         obj['stepNumber'] = assignment.get('stepNumber')
                         for assignment_message in assignment.get('patientAssignmentMessages', []):
                             obj['stepNumber'] = assignment_message.get('stepNumber', obj['stepNumber'])
@@ -572,7 +575,7 @@ class MetaData:
                 data['patientAssignments'] = assignment_reports
                 data['assignmentStatusOutcome'] = outcome
                 self.nodes['case'].extend(self.extract_case(data, patient_id_df))
-                nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data)
+                nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data, patient_id_df)
                 self.nodes['specimen'].extend(speicimens)
                 self.nodes['nucleic_acid'].extend(nucleic_acid_reports)
                 self.nodes['ihc_assay_report'].extend(self.extract_ihc_assay_report(data))
@@ -586,7 +589,7 @@ class MetaData:
                 self.nodes['indel_variant'].extend(indel_variants)
                 self.nodes['copy_number_variant'].extend(copy_number_variants)
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
-                self.nodes['assignment_report'].extend(self.extract_assignment_report(data))
+                self.nodes['assignment_report'].extend(self.extract_assignment_report(data, patient_id_df))
 
         file_list = self.process_assignment_reports()
 
