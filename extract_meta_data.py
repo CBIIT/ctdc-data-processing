@@ -636,6 +636,7 @@ class MetaData:
                 writer.writeheader()
 
                 for obj in reports:
+                    obj['arm_id'] = ctdcArmId_df.loc[ctdcArmId_df['arm_id'] == obj['arm_id'], 'ctdcArmId'].iloc[0]
                     writer.writerow(obj)
                 file_list[arm] = file_name
         self.nodes['assignment_report_file'].extend(self.generate_ar_report_manifest(file_list, ctdcArmId_df))
