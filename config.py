@@ -8,6 +8,7 @@ class Arm:
         self.phs_id = obj['phsId']
         self.pubmed_id = obj['pubmedId']
         self.bucket_name = obj['bucketName']
+        self.ctdcArmId = obj['ctdcArmId']
 
 class Config:
     def __init__(self, file_name):
@@ -26,7 +27,8 @@ class Config:
             arm_obj = {
                 'phsId': obj['phsId'],
                 'pubmedId': obj['pubmedId'],
-                'bucketName': obj['bucketName']
+                'bucketName': obj['bucketName'],
+                'ctdcArmId': obj['ctdcArmId']
             }
             for armId in obj['matchArms']:
                 arm_obj['armId'] = armId

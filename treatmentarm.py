@@ -85,7 +85,7 @@ class ArmAPI:
             raise TypeError(f'arm_id "{arm_id}" is not a string!')
         arm_info = self._retrieve_arm_info(arm_id)
         obj = {}
-        obj['arm_id'] = arm_id
+        obj['arm_id'] = arm.ctdcArmId
         # obj['arm_id'] = self.get_ctdc_arm_id(arm_id)
         obj['arm_target'] = arm_info['gene']
         drugs = arm_info['treatmentArmDrugs']
