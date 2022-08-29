@@ -599,7 +599,6 @@ class MetaData:
                 self.nodes['copy_number_variant'].extend(copy_number_variants)
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data, patient_id_df))
-
         file_list = self.process_assignment_reports(ctdcArmId_df)
         #Remove duplicate
         self.nodes['arm'] = [i for n, i in enumerate(self.nodes['arm']) if i not in self.nodes['arm'][n + 1:]]
