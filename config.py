@@ -8,6 +8,7 @@ class Arm:
         self.phs_id = obj['phsId']
         self.pubmed_id = obj['pubmedId']
         self.bucket_name = obj['bucketName']
+        self.ctdcArmId = obj['ctdcArmId']
 
 class Config:
     def __init__(self, file_name):
@@ -23,7 +24,15 @@ class Config:
         # Read arm objects
         self.arms = []
         for obj in self.data['arms']:
-            self.arms.append(Arm(obj))
+            arm_obj = {
+                'phsId': obj['phsId'],
+                'pubmedId': obj['pubmedId'],
+                'bucketName': obj['bucketName'],
+                'ctdcArmId': obj['ctdcArmId']
+            }
+            for armId in obj['matchArms']:
+                arm_obj['armId'] = armId
+                self.arms.append(Arm(arm_obj))
 
         # Get List of Arms
         self.meta_data_path = self.data['metaDataPath']

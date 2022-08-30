@@ -65,7 +65,7 @@ class MetaData:
         return delimiter.join([obj[field] for obj in objects])
 
 
-    def extract_case(self, data, patient_id_df):
+    def extract_case(self, data, patient_id_df, ctdcArmId):
         obj = {
             'type': 'case',
             'arm.arm_id': data[ARM_ID]
@@ -99,6 +99,7 @@ class MetaData:
             self.log.error('wrong number ({}) of diseases!'.format(len(diseases)))
 
         obj['priorDrugs'] = self.get_prior_drugs(data.get('priorDrugs', []))
+        obj['arm.arm_id'] = ctdcArmId
         return [obj]
 
     def extract_specimen_n_nucleic_acid(self, data, patient_id_df):
@@ -561,8 +562,16 @@ class MetaData:
         self.log.info('Converting the blind ID file to xlsx')
         new_blindID_file_name = convert_to_xlsx(self.config.blindID_mapping_file)
         patient_id_df = pd.read_excel(new_blindID_file_name)
+        ctdcArmId_df = pd.DataFrame(columns=['arm_id', 'ctdcArmId'])
         for arm in self.config.arms:
             arm_id = arm.arm_id
+            ctdcArmId = arm.ctdcArmId
+            ctdcArmId_df_dict = {
+                'arm_id': [arm_id],
+                'ctdcArmId':[ctdcArmId]
+            }
+            ctdcArmId_df_value = pd.DataFrame(data = ctdcArmId_df_dict)
+            ctdcArmId_df = pd.concat([ctdcArmId_df, ctdcArmId_df_value], ignore_index=True)
             self.phs_ids[arm_id] = arm.phs_id
             patients = arm_api.get_patients_for_arm(arm_id)
             self.nodes['arm'].append(arm_api.get_arm_node(arm))
@@ -574,7 +583,7 @@ class MetaData:
                 assignment_reports = get_patient_assignment_reports(token, self.config.match_base_url, patient_id)
                 data['patientAssignments'] = assignment_reports
                 data['assignmentStatusOutcome'] = outcome
-                self.nodes['case'].extend(self.extract_case(data, patient_id_df))
+                self.nodes['case'].extend(self.extract_case(data, patient_id_df, ctdcArmId))
                 nucleic_acid_reports, speicimens = self.extract_specimen_n_nucleic_acid(data, patient_id_df)
                 self.nodes['specimen'].extend(speicimens)
                 self.nodes['nucleic_acid'].extend(nucleic_acid_reports)
@@ -590,16 +599,16 @@ class MetaData:
                 self.nodes['copy_number_variant'].extend(copy_number_variants)
                 self.nodes['gene_fusion_variant'].extend(gene_fusion_variants)
                 self.nodes['assignment_report'].extend(self.extract_assignment_report(data, patient_id_df))
-
-        file_list = self.process_assignment_reports()
-
+        file_list = self.process_assignment_reports(ctdcArmId_df)
+        #Remove duplicate
+        self.nodes['arm'] = [i for n, i in enumerate(self.nodes['arm']) if i not in self.nodes['arm'][n + 1:]]
         file_list.extend(self.write_files())
         file_list.append(get_log_file())
         self.upload_files(file_list)
         for node in self.nodes.keys():
             self.log.info(f'{node} extracted: {len(self.nodes[node])}')
 
-    def process_assignment_reports(self):
+    def process_assignment_reports(self, ctdcArmId_df):
         """
         Write assignment reports into data files, one file per arm.
         Also populate meta data information for 'file' represents assignment_report files
@@ -626,18 +635,19 @@ class MetaData:
                 writer.writeheader()
 
                 for obj in reports:
+                    obj['arm_id'] = ctdcArmId_df.loc[ctdcArmId_df['arm_id'] == obj['arm_id'], 'ctdcArmId'].iloc[0]
                     writer.writerow(obj)
                 file_list[arm] = file_name
-        self.nodes['assignment_report_file'].extend(self.generate_ar_report_manifest(file_list))
+        self.nodes['assignment_report_file'].extend(self.generate_ar_report_manifest(file_list, ctdcArmId_df))
         return list(file_list.values())
 
-    def generate_ar_report_manifest(self, file_list):
+    def generate_ar_report_manifest(self, file_list, ctdcArmId_df):
         files = []
         for arm, file_path in file_list.items():
             file_name = os.path.basename(file_path)
             file_obj = {
                 'type': 'file',
-                'arm.arm_id': arm,
+                'arm.arm_id': ctdcArmId_df.loc[ctdcArmId_df['arm_id'] == arm, 'ctdcArmId'].iloc[0],
                 'show_node': True,
                 'file_description': '',
                 'file_format': get_file_format(file_name),
