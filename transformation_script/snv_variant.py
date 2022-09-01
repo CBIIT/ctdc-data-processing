@@ -10,6 +10,9 @@ def snv_variant_transformation(snv_variant_file_name, log):
     alleleFrequency = []
     snv_variant_df['reference'] = remove_nan(snv_variant_df['reference'])
     snv_variant_df['alternative'] = remove_nan(snv_variant_df['alternative'])
+    snv_variant_df['transcript'] = remove_nan(snv_variant_df['transcript'])
+    snv_variant_df['protein'] = remove_nan(snv_variant_df['protein'])
+    snv_variant_df['function'] = remove_nan(snv_variant_df['function'])
     snv_variant_df['show_node'] = [True] * len(snv_variant_df)
     for index in range(len(snv_variant_df)):
         variant_report_id.append('CTDC-VAR-REP-' + str(snv_variant_df['variant_report.jobName'].iloc[index]))
@@ -22,6 +25,7 @@ def snv_variant_transformation(snv_variant_file_name, log):
     snv_variant_df['variant_id'] = variant_id
     snv_variant_df['snv_variant_of$alleleFrequency'] = alleleFrequency
     snv_variant_df['exon'] = snv_variant_df['exon'].astype('Int32')
+    snv_variant_df['exon'] = remove_nan(snv_variant_df['exon'])
 
     property = [
         {'old':'variant_report.jobName', 'new':'variant_report.variant_report_id'},

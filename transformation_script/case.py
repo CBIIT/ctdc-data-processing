@@ -16,18 +16,21 @@ def case_transformation(case_file_name, log):
         gender.append(case_df['gender'].iloc[index].lower().title())
         race_list = case_df['races'].iloc[index].split('_')
         new_race = ''
-        for race_value in race_list:
-            if race_value == 'OR' or race_value == 'REPORTED':
-                if new_race != '':
-                    new_race = new_race + ' ' + race_value.lower()
+        if case_df['races'].iloc[index] == 'AMERICAN_INDIAN_OR_ALASKA_NATIVE' or case_df['races'].iloc[index] == 'WHITE':
+            races.append('Multirace')
+        else:
+            for race_value in race_list:
+                if race_value == 'OR' or race_value == 'REPORTED':
+                    if new_race != '':
+                        new_race = new_race + ' ' + race_value.lower()
+                    else:
+                        new_race = race_value.lower()
                 else:
-                    new_race = race_value.lower()
-            else:
-                if new_race != '':
-                    new_race = new_race + ' ' + race_value.lower().title()
-                else:
-                    new_race = race_value.lower().title()
-        races.append(new_race)
+                    if new_race != '':
+                        new_race = new_race + ' ' + race_value.lower().title()
+                    else:
+                        new_race = race_value.lower().title()
+            races.append(new_race)
         ethnicity_list = case_df['ethnicity'].iloc[index].split('_')
         new_ethnicity = ''
         for ethnicity_value in ethnicity_list:
