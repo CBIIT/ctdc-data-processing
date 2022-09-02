@@ -67,7 +67,8 @@ def case_transformation(case_file_name, log):
         {'old':'priorDrugs', 'new':'prior_drugs'}
     ]
     case_df = rename_properties(case_df, property)
-    case_df =case_df.reindex(columns=['type', 'show_node', 'arm.arm_id', 'case_id', 'source_id',
+    case_df = case_df.reindex(columns=['type', 'show_node', 'arm.arm_id', 'case_id', 'source_id',
         'gender','race', 'ethnicity', 'patient_status', 'current_step', 'disease', 'ctep_category', 'ctep_subcategory', 'meddra_code', 'prior_drugs'])
+    case_df['meddra_code'] = case_df['meddra_code'].astype('Int32')
     case_df.to_csv('transformation_script/case.tsv', sep = "\t", index = False)
 
