@@ -25,7 +25,7 @@ def snv_variant_transformation(snv_variant_file_name, log):
     snv_variant_df['variant_id'] = variant_id
     #snv_variant_df['snv_variant_of$alleleFrequency'] = alleleFrequency
     snv_variant_df['exon'] = snv_variant_df['exon'].astype('Int32')
-    snv_variant_df['exon'] = remove_nan(snv_variant_df['exon'])
+    #snv_variant_df['exon'] = remove_nan(snv_variant_df['exon'])
 
     property = [
         {'old':'variant_report.jobName', 'new':'variant_report.variant_report_id'},
