@@ -7,7 +7,7 @@ def snv_variant_transformation(snv_variant_file_name, log):
     snv_variant_df = pd.read_csv(snv_variant_file_name)
     variant_report_id = []
     variant_id = []
-    alleleFrequency = []
+    #alleleFrequency = []
     snv_variant_df['reference'] = remove_nan(snv_variant_df['reference'])
     snv_variant_df['alternative'] = remove_nan(snv_variant_df['alternative'])
     snv_variant_df['transcript'] = remove_nan(snv_variant_df['transcript'])
@@ -19,11 +19,11 @@ def snv_variant_transformation(snv_variant_file_name, log):
         variant_id_value = snv_variant_df['chromosome'].iloc[index] + str(snv_variant_df['position'].iloc[index]) + str(snv_variant_df['reference'].iloc[index]) + str(snv_variant_df['alternative'].iloc[index]) + snv_variant_df['hgvs'].iloc[index]
         varidant_id_md5 = str(hashlib.md5(variant_id_value.encode('utf-8')).hexdigest())
         variant_id.append('CTDC-VAR-' + varidant_id_md5)
-        alleleFrequency.append(round(snv_variant_df['snv_variant_of$alleleFrequency'].iloc[index], 1))
+        #alleleFrequency.append(round(snv_variant_df['snv_variant_of$alleleFrequency'].iloc[index], 1))
 
     snv_variant_df['variant_report.jobName'] = variant_report_id
     snv_variant_df['variant_id'] = variant_id
-    snv_variant_df['snv_variant_of$alleleFrequency'] = alleleFrequency
+    #snv_variant_df['snv_variant_of$alleleFrequency'] = alleleFrequency
     snv_variant_df['exon'] = snv_variant_df['exon'].astype('Int32')
     snv_variant_df['exon'] = remove_nan(snv_variant_df['exon'])
 

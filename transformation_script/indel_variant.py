@@ -7,7 +7,7 @@ def indel_variant_transformation(indel_variant_file_name, log):
     indel_variant_df = pd.read_csv(indel_variant_file_name)
     variant_report_id = []
     variant_id = []
-    alleleFrequency = []
+    #alleleFrequency = []
     indel_variant_df['reference'] = remove_nan(indel_variant_df['reference'])
     indel_variant_df['alternative'] = remove_nan(indel_variant_df['alternative'])
     indel_variant_df['show_node'] = [True] * len(indel_variant_df)
@@ -16,11 +16,11 @@ def indel_variant_transformation(indel_variant_file_name, log):
         variant_id_value = indel_variant_df['chromosome'].iloc[index] + str(indel_variant_df['position'].iloc[index]) + str(indel_variant_df['reference'].iloc[index]) + str(indel_variant_df['alternative'].iloc[index]) + indel_variant_df['hgvs'].iloc[index]
         varidant_id_md5 = str(hashlib.md5(variant_id_value.encode('utf-8')).hexdigest())
         variant_id.append('CTDC-VAR-' + varidant_id_md5)
-        alleleFrequency.append(round(indel_variant_df['indel_variant_of$alleleFrequency'].iloc[index], 1))
+        #alleleFrequency.append(round(indel_variant_df['indel_variant_of$alleleFrequency'].iloc[index], 1))
 
     indel_variant_df['variant_report.jobName'] = variant_report_id
     indel_variant_df['variant_id'] = variant_id
-    indel_variant_df['indel_variant_of$alleleFrequency'] = alleleFrequency
+    #indel_variant_df['indel_variant_of$alleleFrequency'] = alleleFrequency
     indel_variant_df['exon'] = indel_variant_df['exon'].astype('Int32')
 
     property = [
