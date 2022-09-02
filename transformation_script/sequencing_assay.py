@@ -4,7 +4,7 @@ from transformation_script.property_function import rename_properties
 def sequencing_assay_transformation(sequencing_assay_file_name, log):
     log.info('Transofrming sequencing_assay.csv')
     sequencing_assay_df = pd.read_csv(sequencing_assay_file_name)
-    sequencing_assay_df['show_node'] = [True] * len(sequencing_assay_df)
+    sequencing_assay_df['show_node'] = ['TRUE'] * len(sequencing_assay_df)
     sequencing_assay_df['platform'] = ['Ion Torrent'] * len(sequencing_assay_df)
     sequencing_assay_df['experimental_method'] = ['Targeted NGS'] * len(sequencing_assay_df)
     sequencing_assay_id = []

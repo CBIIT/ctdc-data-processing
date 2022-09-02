@@ -4,7 +4,7 @@ from transformation_script.property_function import rename_properties
 def ihc_assay_report_transformation(ihc_assay_report_file_name, log):
     log.info('Transforming ihc_assay_report.csv')
     ihc_assay_report_df = pd.read_csv(ihc_assay_report_file_name)
-    ihc_assay_report_df['show_node'] = [True] * len(ihc_assay_report_df)
+    ihc_assay_report_df['show_node'] = ['TRUE'] * len(ihc_assay_report_df)
     specimen_id = []
     ihc_assay_id = []
     ihc_test_gene = []

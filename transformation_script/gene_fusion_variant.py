@@ -6,7 +6,7 @@ import hashlib
 def gene_fusion_variant_transformation(gene_fusion_variant_file_name, log):
     log.info('Transforming gene_fusion_variant.csv')
     gene_fusion_variant_df = pd.read_csv(gene_fusion_variant_file_name)
-    gene_fusion_variant_df['show_node'] = [True] * len(gene_fusion_variant_df)
+    gene_fusion_variant_df['show_node'] = ['TRUE'] * len(gene_fusion_variant_df)
     variant_report_id = []
     variant_id = []
     for index in range(len(gene_fusion_variant_df)):

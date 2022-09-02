@@ -13,7 +13,7 @@ def snv_variant_transformation(snv_variant_file_name, log):
     snv_variant_df['transcript'] = remove_nan(snv_variant_df['transcript'])
     snv_variant_df['protein'] = remove_nan(snv_variant_df['protein'])
     snv_variant_df['function'] = remove_nan(snv_variant_df['function'])
-    snv_variant_df['show_node'] = [True] * len(snv_variant_df)
+    snv_variant_df['show_node'] = ['TRUE'] * len(snv_variant_df)
     for index in range(len(snv_variant_df)):
         variant_report_id.append('CTDC-VAR-REP-' + str(snv_variant_df['variant_report.jobName'].iloc[index]))
         variant_id_value = snv_variant_df['chromosome'].iloc[index] + str(snv_variant_df['position'].iloc[index]) + str(snv_variant_df['reference'].iloc[index]) + str(snv_variant_df['alternative'].iloc[index]) + snv_variant_df['hgvs'].iloc[index]

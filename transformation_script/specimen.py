@@ -6,7 +6,7 @@ def specimen_transformation(specimen_file_name, log):
     specimen_df = pd.read_csv(specimen_file_name)
     case_id = []
     specimen_id = []
-    specimen_df['show_node'] = [True] * len(specimen_df)
+    specimen_df['show_node'] = ['TRUE'] * len(specimen_df)
     specimen_df['specimen_type'] = ['Tumor'] * len(specimen_df)
     for index in range(len(specimen_df)):
         case_id.append('CTDC-' + str(specimen_df['case.patientSequenceNumber'].iloc[index]))

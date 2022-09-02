@@ -9,7 +9,7 @@ def variant_report_transformation(variant_report_file_name, log):
     mapd = []
     cellularity = []
     variant_report_df['reference_genome'] = ['GRCh37'] * len(variant_report_df)
-    variant_report_df['show_node'] = [True] * len(variant_report_df)
+    variant_report_df['show_node'] = ['TRUE'] * len(variant_report_df)
     for index in range(len(variant_report_df)):
         sequencing_assay_id.append('CTDC-SEQ-' + variant_report_df['sequencing_assay.molecularSequenceNumber'].iloc[index])
         variant_report_id.append('CTDC-VAR-REP-' + variant_report_df['jobName'].iloc[index])

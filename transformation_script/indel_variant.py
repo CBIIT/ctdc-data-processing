@@ -10,7 +10,7 @@ def indel_variant_transformation(indel_variant_file_name, log):
     #alleleFrequency = []
     indel_variant_df['reference'] = remove_nan(indel_variant_df['reference'])
     indel_variant_df['alternative'] = remove_nan(indel_variant_df['alternative'])
-    indel_variant_df['show_node'] = [True] * len(indel_variant_df)
+    indel_variant_df['show_node'] = ['TRUE'] * len(indel_variant_df)
     for index in range(len(indel_variant_df)):
         variant_report_id.append('CTDC-VAR-REP-' + str(indel_variant_df['variant_report.jobName'].iloc[index]))
         variant_id_value = indel_variant_df['chromosome'].iloc[index] + str(indel_variant_df['position'].iloc[index]) + str(indel_variant_df['reference'].iloc[index]) + str(indel_variant_df['alternative'].iloc[index]) + indel_variant_df['hgvs'].iloc[index]

@@ -53,7 +53,7 @@ def case_transformation(case_file_name, log):
     case_df['races'] = races
     case_df['gender'] = gender
     case_df['ethnicity'] = ethnicity
-    case_df['show_node'] = [True] * len(case_df)
+    case_df['show_node'] = ['TRUE'] * len(case_df)
     case_df['case_id'] = case_id
     property = [
         {'old':'patientSequenceNumber', 'new':'source_id'},

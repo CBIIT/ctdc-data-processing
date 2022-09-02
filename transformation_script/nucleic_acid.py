@@ -4,7 +4,7 @@ from transformation_script.property_function import rename_properties
 def nucleic_acid_transformation(nucleic_acid_file_name, log):
     log.info('Transforming nucleic_acid.csv')
     nucleic_acid_df = pd.read_csv(nucleic_acid_file_name)
-    nucleic_acid_df['show_node'] = [True] * len(nucleic_acid_df)
+    nucleic_acid_df['show_node'] = ['TRUE'] * len(nucleic_acid_df)
     nucleic_acid_df['nucleic_acid_type'] = ['Pooled DNA/cDNA'] * len(nucleic_acid_df)
     specimen_id = []
     aliquot_id = []

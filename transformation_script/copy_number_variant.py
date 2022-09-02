@@ -6,7 +6,7 @@ from transformation_script.property_function import rename_properties
 def copy_number_variant_transformation(copy_number_variant_file_name, log):
     log.info('Transforming copy_number_variant.csv')
     copy_number_variant_df = pd.read_csv(copy_number_variant_file_name)
-    copy_number_variant_df['show_node'] = [True] * len(copy_number_variant_df)
+    copy_number_variant_df['show_node'] = ['TRUE'] * len(copy_number_variant_df)
     variant_report_id = []
     variant_id = []
     #new_copyNumber = []
