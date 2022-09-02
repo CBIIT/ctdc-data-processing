@@ -16,7 +16,7 @@ def case_transformation(case_file_name, log):
         gender.append(case_df['gender'].iloc[index].lower().title())
         race_list = case_df['races'].iloc[index].split('_')
         new_race = ''
-        if case_df['races'].iloc[index] == 'AMERICAN_INDIAN_OR_ALASKA_NATIVE' or case_df['races'].iloc[index] == 'WHITE':
+        if case_df['races'].iloc[index] == 'AMERICAN_INDIAN_OR_ALASKA_NATIVE, WHITE':
             races.append('Multirace')
         else:
             for race_value in race_list:
