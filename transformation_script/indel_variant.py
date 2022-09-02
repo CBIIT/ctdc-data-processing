@@ -35,5 +35,7 @@ def indel_variant_transformation(indel_variant_file_name, log):
         {'old':'protein', 'new':'amino_acid_change'}
     ]
     indel_variant_df = rename_properties(indel_variant_df, property)
+    indel_variant_df = indel_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id','gene', 'chromosome', 'exon',
+        'position', 'reference', 'alternative', 'indel_variant_of$allele_frequency', 'transcript_id', 'transcript_hgvs', 'oncomine_variant_class', 'variant_classification', 'amino_acid_change', 'genomic_hgvs'])
     indel_variant_df.to_csv('transformation_script/indel_variant.tsv', sep = "\t", index = False)
 

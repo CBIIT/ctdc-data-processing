@@ -21,5 +21,7 @@ def nucleic_acid_transformation(nucleic_acid_file_name, log):
         {'old':'dnaVolume', 'new':'nucleic_acid_volume'}
     ]
     nucleic_acid_df = rename_properties(nucleic_acid_df, property)
+    nucleic_acid_df = nucleic_acid_df.reindex(columns=['type', 'show_node', 'specimen.specimen_id', 'aliquot_id', 'molecular_sequence_number',
+        'nucleic_acid_concentration', 'nucleic_acid_volume', 'nucleic_acid_type'])
     nucleic_acid_df.to_csv('transformation_script/nucleic_acid.tsv', sep = "\t", index = False)
 

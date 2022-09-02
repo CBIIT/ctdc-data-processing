@@ -33,6 +33,7 @@ def ihc_assay_report_transformation(ihc_assay_report_file_name, log):
         {'old':'result', 'new':'ihc_test_result'}
     ]
     ihc_assay_report_df = rename_properties(ihc_assay_report_df, property)
+    ihc_assay_report_df = ihc_assay_report_df.reindex(columns=['type', 'show_node', 'specimen.specimen_id', 'ihc_assay_id', 'ihc_test_gene', 'ihc_test_result'])
     ihc_assay_report_df.to_csv('transformation_script/ihc_assay_report.tsv', sep = "\t", index = False)
 
 

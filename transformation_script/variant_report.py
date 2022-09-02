@@ -28,5 +28,7 @@ def variant_report_transformation(variant_report_file_name, log):
         {'old':'tvc_version', 'new':'torrent_variant_caller_version'}
     ]
     variant_report_df = rename_properties(variant_report_df, property)
+    variant_report_df = variant_report_df.reindex(columns=['type', 'show_node', 'sequencing_assay.sequencing_assay_id', 'variant_report_id',
+        'analysis_id', 'mapd', 'cellularity', 'torrent_variant_caller_version', 'reference_genome'])
     variant_report_df.to_csv('transformation_script/variant_report.tsv', sep = "\t", index = False)
 

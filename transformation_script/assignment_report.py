@@ -9,5 +9,7 @@ def assignment_report_transformation(assignment_file_name, log):
         new_arm_id.append(arm_id_list[1])
     assignment_df['arm.arm_id'] = new_arm_id
     assignment_df = assignment_df.drop(columns = ['acl'])
+    assignment_df = assignment_df.reindex(columns=['type', 'show_node', 'arm.arm_id', 'file_description', 'file_format',
+        'file_name', 'file_size', 'file_type', 'md5sum'])
     assignment_df.to_csv('transformation_script/assignment_report2.tsv', sep = "\t", index = False)
 

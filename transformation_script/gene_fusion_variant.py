@@ -27,5 +27,7 @@ def gene_fusion_variant_transformation(gene_fusion_variant_file_name, log):
         {'old':'oncominevariantclass', 'new':'oncomine_variant_class'}
     ]
     gene_fusion_variant_df = rename_properties(gene_fusion_variant_df, property)
+    gene_fusion_variant_df =gene_fusion_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id',
+        'gene1', 'gene_fusion_variant_of$gene1_read_count', 'gene2', 'gene_fusion_variant_of$gene2_read_count', 'oncomine_variant_class'])
     gene_fusion_variant_df.to_csv('transformation_script/gene_fusion_variant.tsv', sep = "\t", index = False)
 

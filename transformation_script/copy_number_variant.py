@@ -35,5 +35,7 @@ def copy_number_variant_transformation(copy_number_variant_file_name, log):
         {'old':'copy_number_variant_of$copyNumber', 'new':'copy_number_variant_of$copy_number'}
     ]
     copy_number_variant_df = rename_properties(copy_number_variant_df, property)
+    copy_number_variant_df = copy_number_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id',
+        'gene', 'chromosome', 'copy_number_variant_of$copy_number', 'copy_number_variant_of$copy_number_ci_5', 'copy_number_variant_of$copy_number_ci_95', 'oncomine_variant_class', 'tumor_suppressor'])
     copy_number_variant_df.to_csv('transformation_script/copy_number_variant.tsv', sep = "\t", index = False)
 

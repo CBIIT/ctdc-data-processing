@@ -18,5 +18,6 @@ def specimen_transformation(specimen_file_name, log):
         {'old':'biopsySequenceNumber', 'new':'biopsy_sequence_number'}
     ]
     specimen_df = rename_properties(specimen_df, property)
+    specimen_df = specimen_df.reindex(columns=['type', 'show_node', 'case.case_id', 'specimen_id', 'biopsy_sequence_number', 'specimen_type'])
     specimen_df.to_csv('transformation_script/specimen.tsv', sep = "\t", index = False)
 

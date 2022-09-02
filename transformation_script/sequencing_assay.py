@@ -19,5 +19,6 @@ def sequencing_assay_transformation(sequencing_assay_file_name, log):
     ]
     sequencing_assay_df = rename_properties(sequencing_assay_df, property)
     sequencing_assay_df = rename_properties(sequencing_assay_df, property)
+    sequencing_assay_df = sequencing_assay_df.reindex(columns=['type', 'show_node', 'nucleic_acid.aliquot_id', 'sequencing_assay_id', 'qc_result', 'platform', 'experimental_method'])
     sequencing_assay_df.to_csv('transformation_script/sequencing_assay.tsv', sep = "\t", index = False)
 

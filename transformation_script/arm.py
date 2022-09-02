@@ -19,6 +19,7 @@ def arm_transformation(arm_file_name, log):
         {'new_property':'show_node', 'new_value':[True] * len(arm_df)}
     ]
     arm_df = add_properties(arm_df, props)
+    arm_df = arm_df.reindex(columns=['show_node', 'type', 'clinical_trial.clinical_trial_id', 'arm_id', 'arm_target', 'arm_drug', 'pubmed_id'])
     arm_df.to_csv('transformation_script/arm.tsv', sep = "\t", index = False)
 
 

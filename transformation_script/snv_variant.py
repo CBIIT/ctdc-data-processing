@@ -39,5 +39,7 @@ def snv_variant_transformation(snv_variant_file_name, log):
         {'old':'protein', 'new':'amino_acid_change'}
     ]
     snv_variant_df = rename_properties(snv_variant_df, property)
+    snv_variant_df = snv_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id', 'gene', 'chromosome', 'exon',
+        'position', 'reference', 'alternative', 'snv_variant_of$allele_frequency', 'transcript_id', 'transcript_hgvs', 'oncomine_variant_class', 'variant_classification', 'amino_acid_change', 'genomic_hgvs'])
     snv_variant_df.to_csv('transformation_script/snv.tsv', sep = "\t", index = False)
 
