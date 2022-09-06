@@ -1,5 +1,5 @@
 import pandas as pd
-from transformation_script.property_function import rename_properties
+from transformation_script.property_function import rename_properties, remove_trailing_zero
 
 def nucleic_acid_transformation(nucleic_acid_file_name, log):
     log.info('Transforming nucleic_acid.csv')
@@ -23,5 +23,8 @@ def nucleic_acid_transformation(nucleic_acid_file_name, log):
     nucleic_acid_df = rename_properties(nucleic_acid_df, property)
     nucleic_acid_df = nucleic_acid_df.reindex(columns=['type', 'show_node', 'specimen.specimen_id', 'aliquot_id', 'molecular_sequence_number',
         'nucleic_acid_concentration', 'nucleic_acid_volume', 'nucleic_acid_type'])
+
+    nucleic_acid_df['nucleic_acid_volume'] = remove_trailing_zero(nucleic_acid_df['nucleic_acid_volume'])
+    nucleic_acid_df['nucleic_acid_concentration'] = remove_trailing_zero(nucleic_acid_df['nucleic_acid_concentration'])
     nucleic_acid_df.to_csv('transformation_script/nucleic_acid.tsv', sep = "\t", index = False)
 

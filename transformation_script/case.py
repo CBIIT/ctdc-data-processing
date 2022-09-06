@@ -1,5 +1,5 @@
 import pandas as pd
-from transformation_script.property_function import rename_properties, remove_nan
+from transformation_script.property_function import rename_properties, remove_nan, remove_trailing_zero
 
 def case_transformation(case_file_name, log):
     log.info('Transforming case.csv')
@@ -69,6 +69,6 @@ def case_transformation(case_file_name, log):
     case_df = rename_properties(case_df, property)
     case_df = case_df.reindex(columns=['type', 'show_node', 'arm.arm_id', 'case_id', 'source_id',
         'gender','race', 'ethnicity', 'patient_status', 'current_step', 'disease', 'ctep_category', 'ctep_subcategory', 'meddra_code', 'prior_drugs'])
-    case_df['meddra_code'] = case_df['meddra_code'].astype('Int32')
+    case_df['meddra_code'] = remove_trailing_zero(case_df['meddra_code'])
     case_df.to_csv('transformation_script/case.tsv', sep = "\t", index = False)
 

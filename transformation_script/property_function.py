@@ -18,3 +18,13 @@ def remove_nan(value_list):
         else:
             new_value_list.append(value)
     return new_value_list
+
+def remove_trailing_zero(value_list):
+    new_value_list = []
+    for value in value_list:
+        str_value = str(value)
+        if str_value.endswith('.0'):
+            new_value_list.append(str_value[:-2])
+        else:
+            new_value_list.append(str_value)
+    return new_value_list

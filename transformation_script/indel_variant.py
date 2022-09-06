@@ -1,6 +1,6 @@
 import pandas as pd
 import hashlib
-from transformation_script.property_function import rename_properties, remove_nan
+from transformation_script.property_function import rename_properties, remove_nan, remove_trailing_zero
 
 def indel_variant_transformation(indel_variant_file_name, log):
     log.info('Transforming indel_variant.csv')
@@ -21,8 +21,6 @@ def indel_variant_transformation(indel_variant_file_name, log):
     indel_variant_df['variant_report.jobName'] = variant_report_id
     indel_variant_df['variant_id'] = variant_id
     #indel_variant_df['indel_variant_of$alleleFrequency'] = alleleFrequency
-    indel_variant_df['exon'] = indel_variant_df['exon'].astype('Int32')
-
     property = [
         {'old':'variant_report.jobName', 'new':'variant_report.variant_report_id'},
         {'old':'indel_variant_of$alleleFrequency', 'new':'indel_variant_of$allele_frequency'},
@@ -35,6 +33,7 @@ def indel_variant_transformation(indel_variant_file_name, log):
         {'old':'protein', 'new':'amino_acid_change'}
     ]
     indel_variant_df = rename_properties(indel_variant_df, property)
+    indel_variant_df['exon'] = remove_trailing_zero(indel_variant_df['exon'])
     indel_variant_df = indel_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id','gene', 'chromosome', 'exon',
         'position', 'reference', 'alternative', 'indel_variant_of$allele_frequency', 'transcript_id', 'transcript_hgvs', 'oncomine_variant_class', 'variant_classification', 'amino_acid_change', 'genomic_hgvs'])
     indel_variant_df.to_csv('transformation_script/indel_variant.tsv', sep = "\t", index = False)
