@@ -25,6 +25,8 @@ def remove_trailing_zero(value_list):
         str_value = str(value)
         if str_value.endswith('.0'):
             new_value_list.append(str_value[:-2])
+        elif pd.isna(value):
+            new_value_list.append(None)
         else:
             new_value_list.append(str_value)
     return new_value_list
