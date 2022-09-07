@@ -13,3 +13,6 @@ for file in glob.glob("*.tsv"):
     #csvdata = csvdata.reindex(sorted(csvdata.columns), axis=1)
     #csvdata_old = csvdata_old.reindex(sorted(csvdata_old.columns), axis=1)
     print(csvdata.equals(csvdata_old))
+
+    if not csvdata.equals(csvdata_old):
+        print(csvdata.compare(csvdata_old))
