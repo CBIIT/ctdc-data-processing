@@ -86,6 +86,7 @@ class ArmAPI:
         arm_info = self._retrieve_arm_info(arm_id)
         obj = {}
         obj['arm_id'] = arm.ctdcArmId
+        obj['clinical_trial.clinical_trial_id'] = arm.clinicalTrialID
         # obj['arm_id'] = self.get_ctdc_arm_id(arm_id)
         obj['arm_target'] = arm_info['gene']
         drugs = arm_info['treatmentArmDrugs']
