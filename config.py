@@ -30,7 +30,7 @@ class Config:
                 'pubmedId': obj['pubmedId'],
                 'bucketName': obj['bucketName'],
                 'ctdcArmId': obj['ctdcArmId'],
-                'clinicalTrialID': self.data['clinicalTrialID']
+                'clinicalTrialID': obj['clinicalTrialID']
             }
             for armId in obj['matchArms']:
                 arm_obj['armId'] = armId
