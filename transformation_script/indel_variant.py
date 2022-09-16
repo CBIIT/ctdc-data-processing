@@ -2,7 +2,7 @@ import pandas as pd
 import hashlib
 from transformation_script.property_function import rename_properties, remove_nan, remove_trailing_zero
 
-def indel_variant_transformation(indel_variant_file_name, log):
+def indel_variant_transformation(indel_variant_file_name, log, config):
     log.info('Transforming indel_variant.csv')
     indel_variant_df = pd.read_csv(indel_variant_file_name)
     variant_report_id = []
@@ -36,5 +36,8 @@ def indel_variant_transformation(indel_variant_file_name, log):
     indel_variant_df['exon'] = remove_trailing_zero(indel_variant_df['exon'])
     indel_variant_df = indel_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id','gene', 'chromosome', 'exon',
         'position', 'reference', 'alternative', 'indel_variant_of$allele_frequency', 'transcript_id', 'transcript_hgvs', 'oncomine_variant_class', 'variant_classification', 'amino_acid_change', 'genomic_hgvs'])
-    indel_variant_df.to_csv('transformation_script/indel_variant.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['indel_variant'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    indel_variant_df.to_csv(output_file, sep = "\t", index = False)
 

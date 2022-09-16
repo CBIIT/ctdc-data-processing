@@ -1,7 +1,7 @@
 import pandas as pd
 from transformation_script.property_function import rename_properties, remove_trailing_zero
 
-def variant_report_transformation(variant_report_file_name, log):
+def variant_report_transformation(variant_report_file_name, log, config):
     log.info('Transforming variant_report.csv')
     variant_report_df = pd.read_csv(variant_report_file_name)
     sequencing_assay_id = []
@@ -25,5 +25,8 @@ def variant_report_transformation(variant_report_file_name, log):
     variant_report_df = variant_report_df.reindex(columns=['type', 'show_node', 'sequencing_assay.sequencing_assay_id', 'variant_report_id',
         'analysis_id', 'mapd', 'cellularity', 'torrent_variant_caller_version', 'reference_genome'])
     variant_report_df['cellularity'] = remove_trailing_zero(variant_report_df['cellularity'])
-    variant_report_df.to_csv('transformation_script/variant_report.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['variant_report'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    variant_report_df.to_csv(output_file, sep = "\t", index = False)
 

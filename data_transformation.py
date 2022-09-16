@@ -11,18 +11,30 @@ from transformation_script.sequencing_assay import sequencing_assay_transformati
 from transformation_script.snv_variant import snv_variant_transformation
 from transformation_script.specimen import specimen_transformation
 from transformation_script.variant_report import variant_report_transformation
+from config import Config
+import argparse
+
+
+parser = argparse.ArgumentParser(description='Data Transformation')
+parser.add_argument("config_file", help="Name of Configuration File to run the Data Transformation")
+args = parser.parse_args()
+
+config = Config(args.config_file)
+input_folder = config.input_folder
+input_files = config.input_files
 
 LOGER_NAME = 'CTDC Data Transformation'
 log = get_logger(LOGER_NAME)
-arm_transformation('transformation_script/raw/arm.csv', log)
-assignment_report_transformation('transformation_script/raw/assignment_report_file.csv', log)
-case_transformation('transformation_script/raw/case.csv', log)
-copy_number_variant_transformation('transformation_script/raw/copy_number_variant.csv', log)
-gene_fusion_variant_transformation('transformation_script/raw/gene_fusion_variant.csv', log)
-ihc_assay_report_transformation('transformation_script/raw/ihc_assay_report.csv', log)
-indel_variant_transformation('transformation_script/raw/indel_variant.csv', log)
-nucleic_acid_transformation('transformation_script/raw/nucleic_acid.csv', log)
-sequencing_assay_transformation('transformation_script/raw/sequencing_assay.csv', log)
-snv_variant_transformation('transformation_script/raw/snv_variant.csv', log)
-specimen_transformation('transformation_script/raw/specimen.csv', log)
-variant_report_transformation('transformation_script/raw/variant_report.csv', log)
+
+arm_transformation(input_folder + input_files['arm'], log, config)
+assignment_report_transformation(input_folder + input_files["assignment_report"], log,config)
+case_transformation(input_folder + input_files['case'], log, config)
+copy_number_variant_transformation(input_folder + input_files['copy_number_variant'], log, config)
+gene_fusion_variant_transformation(input_folder + input_files['gene_fusion_variant'], log, config)
+ihc_assay_report_transformation(input_folder + input_files['ihc_assay_report'], log, config)
+indel_variant_transformation(input_folder + input_files['indel_variant'], log, config)
+nucleic_acid_transformation(input_folder + input_files['nucleic_acid'], log, config)
+sequencing_assay_transformation(input_folder + input_files['sequencing_assay'], log, config)
+snv_variant_transformation(input_folder + input_files['snv_variant'], log, config)
+specimen_transformation(input_folder + input_files['specimen'], log, config)
+variant_report_transformation('transformation_script/raw/variant_report.csv', log, config)

@@ -1,7 +1,7 @@
 import pandas as pd
 from transformation_script.property_function import rename_properties
 
-def specimen_transformation(specimen_file_name, log):
+def specimen_transformation(specimen_file_name, log, config):
     log.info('Transforming specimen.csv')
     specimen_df = pd.read_csv(specimen_file_name)
     case_id = []
@@ -19,5 +19,8 @@ def specimen_transformation(specimen_file_name, log):
     ]
     specimen_df = rename_properties(specimen_df, property)
     specimen_df = specimen_df.reindex(columns=['type', 'show_node', 'case.case_id', 'specimen_id', 'biopsy_sequence_number', 'specimen_type'])
-    specimen_df.to_csv('transformation_script/specimen.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['specimen'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    specimen_df.to_csv(output_file, sep = "\t", index = False)
 

@@ -1,7 +1,7 @@
 import pandas as pd
 from transformation_script.property_function import rename_properties
 
-def ihc_assay_report_transformation(ihc_assay_report_file_name, log):
+def ihc_assay_report_transformation(ihc_assay_report_file_name, log, config):
     log.info('Transforming ihc_assay_report.csv')
     ihc_assay_report_df = pd.read_csv(ihc_assay_report_file_name)
     ihc_assay_report_df['show_node'] = ['TRUE'] * len(ihc_assay_report_df)
@@ -34,6 +34,9 @@ def ihc_assay_report_transformation(ihc_assay_report_file_name, log):
     ]
     ihc_assay_report_df = rename_properties(ihc_assay_report_df, property)
     ihc_assay_report_df = ihc_assay_report_df.reindex(columns=['type', 'show_node', 'specimen.specimen_id', 'ihc_assay_id', 'ihc_test_gene', 'ihc_test_result'])
-    ihc_assay_report_df.to_csv('transformation_script/ihc_assay_report.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['ihc_assay_report'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    ihc_assay_report_df.to_csv(output_file, sep = "\t", index = False)
 
 

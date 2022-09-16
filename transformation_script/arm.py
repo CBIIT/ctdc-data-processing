@@ -4,7 +4,7 @@ from transformation_script.property_function import add_properties
 
 
 
-def arm_transformation(arm_file_name, log):
+def arm_transformation(arm_file_name, log, config):
     #log = get_logger('Arm Transformation')
     log.info('Transforming arm.csv')
     arm_df = pd.read_csv(arm_file_name)
@@ -23,6 +23,9 @@ def arm_transformation(arm_file_name, log):
     ]
     arm_df = add_properties(arm_df, props)
     arm_df = arm_df.reindex(columns=['show_node', 'type', 'clinical_trial.clinical_trial_id', 'arm_id', 'arm_target', 'arm_drug', 'pubmed_id'])
-    arm_df.to_csv('transformation_script/arm.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['arm'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    arm_df.to_csv(output_file, sep = "\t", index = False)
 
 

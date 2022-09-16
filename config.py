@@ -9,6 +9,7 @@ class Arm:
         self.pubmed_id = obj['pubmedId']
         self.bucket_name = obj['bucketName']
         self.ctdcArmId = obj['ctdcArmId']
+        self.clinicalTrialID = obj['clinicalTrialID']
 
 class Config:
     def __init__(self, file_name):
@@ -28,7 +29,8 @@ class Config:
                 'phsId': obj['phsId'],
                 'pubmedId': obj['pubmedId'],
                 'bucketName': obj['bucketName'],
-                'ctdcArmId': obj['ctdcArmId']
+                'ctdcArmId': obj['ctdcArmId'],
+                'clinicalTrialID': obj['clinicalTrialID']
             }
             for armId in obj['matchArms']:
                 arm_obj['armId'] = armId
@@ -48,6 +50,11 @@ class Config:
         self.match_base_url = removeTrailingSlash(self.data['matchBaseUrl'])
         # Get the blind ID Mapping file
         self.blindID_mapping_file = self.data['blindID_mapping_file']
+
+        self.input_folder = self.data['input_folder']
+        self.output_folder = self.data['output_folder']
+        self.input_files = self.data['input_files']
+
 
         if self.use_prod == False:
             self.log.info('Using Match UAT Environment')

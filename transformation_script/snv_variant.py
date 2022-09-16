@@ -2,7 +2,7 @@ import pandas as pd
 import hashlib
 from transformation_script.property_function import rename_properties, remove_nan, remove_trailing_zero
 
-def snv_variant_transformation(snv_variant_file_name, log):
+def snv_variant_transformation(snv_variant_file_name, log, config):
     log.info('Transforming snv_variant.csv')
     snv_variant_df = pd.read_csv(snv_variant_file_name)
     variant_report_id = []
@@ -41,5 +41,8 @@ def snv_variant_transformation(snv_variant_file_name, log):
     snv_variant_df['exon'] = remove_trailing_zero(snv_variant_df['exon'])
     snv_variant_df = snv_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id', 'gene', 'chromosome', 'exon',
         'position', 'reference', 'alternative', 'snv_variant_of$allele_frequency', 'transcript_id', 'transcript_hgvs', 'oncomine_variant_class', 'variant_classification', 'amino_acid_change', 'genomic_hgvs'])
-    snv_variant_df.to_csv('transformation_script/snv.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['snv_variant'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    snv_variant_df.to_csv(output_file, sep = "\t", index = False)
 

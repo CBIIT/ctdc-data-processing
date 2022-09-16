@@ -1,7 +1,7 @@
 import pandas as pd
 from transformation_script.property_function import rename_properties, remove_trailing_zero
 
-def nucleic_acid_transformation(nucleic_acid_file_name, log):
+def nucleic_acid_transformation(nucleic_acid_file_name, log, config):
     log.info('Transforming nucleic_acid.csv')
     nucleic_acid_df = pd.read_csv(nucleic_acid_file_name)
     nucleic_acid_df['show_node'] = ['TRUE'] * len(nucleic_acid_df)
@@ -26,5 +26,8 @@ def nucleic_acid_transformation(nucleic_acid_file_name, log):
 
     nucleic_acid_df['nucleic_acid_volume'] = remove_trailing_zero(nucleic_acid_df['nucleic_acid_volume'])
     nucleic_acid_df['nucleic_acid_concentration'] = remove_trailing_zero(nucleic_acid_df['nucleic_acid_concentration'])
-    nucleic_acid_df.to_csv('transformation_script/nucleic_acid.tsv', sep = "\t", index = False)
+
+    input_file_list = config.input_files['nucleic_acid'].split('.')
+    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    nucleic_acid_df.to_csv(output_file, sep = "\t", index = False)
 
