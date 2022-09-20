@@ -1,0 +1,18 @@
+{
+    "input_folder": "tmp",
+    "output_folder": "tmp/transformed",
+    "input_files":{
+        "arm": "arm.csv",
+        "assignment_report": "assignment_report_file.csv",
+        "case": "case.csv",
+        "copy_number_variant": "copy_number_variant.csv",
+        "gene_fusion_variant": "gene_fusion_variant.csv",
+        "ihc_assay_report": "ihc_assay_report.csv",
+        "indel_variant": "indel_variant.csv",
+        "nucleic_acid": "nucleic_acid.csv",
+        "sequencing_assay": "sequencing_assay.csv",
+        "snv_variant": "snv_variant.csv",
+        "specimen": "specimen.csv",
+        "variant_report": "variant_report.csv"
+    }
+}
