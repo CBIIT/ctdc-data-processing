@@ -9,6 +9,7 @@ class Arm:
         self.pubmed_id = obj['pubmedId']
         self.bucket_name = obj['bucketName']
         self.ctdcArmId = obj['ctdcArmId']
+        self.clinicalTrialID = obj['clinicalTrialID']
 
 class Config:
     def __init__(self, file_name):
@@ -28,7 +29,8 @@ class Config:
                 'phsId': obj['phsId'],
                 'pubmedId': obj['pubmedId'],
                 'bucketName': obj['bucketName'],
-                'ctdcArmId': obj['ctdcArmId']
+                'ctdcArmId': obj['ctdcArmId'],
+                'clinicalTrialID': obj['clinicalTrialID']
             }
             for armId in obj['matchArms']:
                 arm_obj['armId'] = armId
