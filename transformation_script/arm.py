@@ -1,10 +1,11 @@
 import pandas as pd
 from transformation_script.property_function import add_properties
+import os
 #from bento.common.utils import get_logger
 
 
 
-def arm_transformation(arm_file_name, log, config):
+def arm_transformation(arm_file_name, log, input_files, output_folder):
     #log = get_logger('Arm Transformation')
     log.info('Transforming arm.csv')
     arm_df = pd.read_csv(arm_file_name)
@@ -24,8 +25,8 @@ def arm_transformation(arm_file_name, log, config):
     arm_df = add_properties(arm_df, props)
     arm_df = arm_df.reindex(columns=['show_node', 'type', 'clinical_trial.clinical_trial_id', 'arm_id', 'arm_target', 'arm_drug', 'pubmed_id'])
 
-    input_file_list = config.input_files['arm'].split('.')
-    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    input_file_name = os.path.splitext(input_files['arm'])[0]
+    output_file = os.path.join(output_folder, input_file_name + ".tsv")
     arm_df.to_csv(output_file, sep = "\t", index = False)
 
 

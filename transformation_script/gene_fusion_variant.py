@@ -1,9 +1,10 @@
 import pandas as pd
 from transformation_script.property_function import rename_properties
 import hashlib
+import os
 
 
-def gene_fusion_variant_transformation(gene_fusion_variant_file_name, log, config):
+def gene_fusion_variant_transformation(gene_fusion_variant_file_name, log, input_files, output_folder):
     log.info('Transforming gene_fusion_variant.csv')
     gene_fusion_variant_df = pd.read_csv(gene_fusion_variant_file_name)
     gene_fusion_variant_df['show_node'] = ['TRUE'] * len(gene_fusion_variant_df)
@@ -30,7 +31,7 @@ def gene_fusion_variant_transformation(gene_fusion_variant_file_name, log, confi
     gene_fusion_variant_df =gene_fusion_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id',
         'gene1', 'gene_fusion_variant_of$gene1_read_count', 'gene2', 'gene_fusion_variant_of$gene2_read_count', 'oncomine_variant_class'])
 
-    input_file_list = config.input_files['gene_fusion_variant'].split('.')
-    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    input_file_name = os.path.splitext(input_files['gene_fusion_variant'])[0]
+    output_file = os.path.join(output_folder, input_file_name + ".tsv")
     gene_fusion_variant_df.to_csv(output_file, sep = "\t", index = False)
 

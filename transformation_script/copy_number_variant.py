@@ -1,9 +1,10 @@
 import pandas as pd
 import hashlib
 from transformation_script.property_function import rename_properties
+import os
 
 
-def copy_number_variant_transformation(copy_number_variant_file_name, log, config):
+def copy_number_variant_transformation(copy_number_variant_file_name, log, input_files, output_folder):
     log.info('Transforming copy_number_variant.csv')
     copy_number_variant_df = pd.read_csv(copy_number_variant_file_name)
     copy_number_variant_df['show_node'] = ['TRUE'] * len(copy_number_variant_df)
@@ -39,7 +40,7 @@ def copy_number_variant_transformation(copy_number_variant_file_name, log, confi
     copy_number_variant_df = copy_number_variant_df.reindex(columns=['type', 'show_node', 'variant_report.variant_report_id', 'variant_id', 'external_variant_id',
         'gene', 'chromosome', 'copy_number_variant_of$copy_number', 'copy_number_variant_of$copy_number_ci_5', 'copy_number_variant_of$copy_number_ci_95', 'oncomine_variant_class', 'tumor_suppressor'])
 
-    input_file_list = config.input_files['copy_number_variant'].split('.')
-    output_file = config.output_folder + input_file_list[0] + ".tsv"
+    input_file_name = os.path.splitext(input_files['copy_number_variant'])[0]
+    output_file = os.path.join(output_folder, input_file_name + ".tsv")
     copy_number_variant_df.to_csv(output_file, sep = "\t", index = False)
 
