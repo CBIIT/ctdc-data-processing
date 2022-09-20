@@ -51,10 +51,6 @@ class Config:
         # Get the blind ID Mapping file
         self.blindID_mapping_file = self.data['blindID_mapping_file']
 
-        self.input_folder = self.data['input_folder']
-        self.output_folder = self.data['output_folder']
-        self.input_files = self.data['input_files']
-
 
         if self.use_prod == False:
             self.log.info('Using Match UAT Environment')
